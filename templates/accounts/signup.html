@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng ký - Hệ thống Quản lý Bãi Đỗ Xe{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: #24242b; }
+    .auth-container { max-width: 720px; margin: 60px auto; }
+    .auth-card { background: #353543; border-radius: 8px; padding: 32px 36px; color: #fff; }
+    .auth-title { text-align: center; font-size: 32px; font-weight: 700; color: #f0a15f; margin-bottom: 24px; }
+    .auth-input { background: #2b2b33; border: 1px solid #4a4a58; color: #fff; height: 46px; }
+    .auth-input:focus { background: #2b2b33; color: #fff; border-color: #f0a15f; box-shadow: none; }
+    .auth-btn { background: #f0a15f; border: none; height: 44px; font-weight: 600; }
+    .auth-tabs { display: flex; justify-content: center; gap: 32px; margin-bottom: 16px; }
+    .auth-tab { color: #f0a15f; text-decoration: none; }
+    .auth-tab:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-tabs">
+        <a class="auth-tab" href="{% url 'signup' %}">Sign up</a>
+        <a class="auth-tab" href="{% url 'login' %}">Login</a>
+    </div>
+    <div class="auth-card">
+        <div class="auth-title">Sign up</div>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control auth-input" id="username" name="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control auth-input" id="password" name="password" required>
+            </div>
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">Confirm password</label>
+                <input type="password" class="form-control auth-input" id="confirm_password" name="confirm_password" required>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control auth-input" id="email" name="email">
+            </div>
+            <div class="mb-3">
+                <label for="full_name" class="form-label">Họ và tên</label>
+                <input type="text" class="form-control auth-input" id="full_name" name="full_name">
+            </div>
+            <div class="mb-3">
+                <label for="phone_number" class="form-label">Số điện thoại</label>
+                <input type="text" class="form-control auth-input" id="phone_number" name="phone_number">
+            </div>
+            <div class="mb-3">
+                <label for="address" class="form-label">Địa chỉ</label>
+                <input type="text" class="form-control auth-input" id="address" name="address" placeholder="Địa chỉ (tùy chọn)">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Đăng ký với vai trò</label>
+                <div class="d-flex gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="role" id="role_khachhang" value="khachhang" checked>
+                        <label class="form-check-label" for="role_khachhang">
+                            Khách hàng
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="role" id="role_nhanvien" value="nhanvien">
+                        <label class="form-check-label" for="role_nhanvien">
+                            Nhân viên
+                        </label>
+                    </div>
+                </div>
+                <div class="text-warning mt-2" id="nhanvien_notice" style="display: none; font-size: 0.9rem;">
+                    <i>Lưu ý: Tài khoản nhân viên sẽ cần được quản trị viên xác thực trước khi sử dụng.</i>
+                </div>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn auth-btn">Sign up</button>
+            </div>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const roleNhanvien = document.getElementById('role_nhanvien');
+                    const nhanvienNotice = document.getElementById('nhanvien_notice');
+                    
+                    function toggleNotice() {
+                        if (roleNhanvien.checked) {
+                            nhanvienNotice.style.display = 'block';
+                        } else {
+                            nhanvienNotice.style.display = 'none';
+                        }
+                    }
+                    
+                    roleNhanvien.addEventListener('change', toggleNotice);
+                    document.getElementById('role_khachhang').addEventListener('change', toggleNotice);
+                    
+                    // Kiểm tra ban đầu
+                    toggleNotice();
+                });
+            <div class="d-grid">
+                <button type="submit" class="btn auth-btn">Sign up</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,113 @@
+{% extends 'customers/customer_base.html' %}
+{% block title %}Xe của tôi{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0">
+            <i class="bi bi-car-front-fill text-primary"></i> Xe của tôi
+        </h4>
+        <a class="btn btn-primary" href="{% url 'customers:vehicle_register' %}">
+            <i class="bi bi-plus-circle"></i> Đăng ký phương tiện
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Debug info -->
+    {% if request.user.is_authenticated %}
+    <div class="alert alert-info mb-3">
+        <small>
+            <strong>Debug:</strong> User: {{ request.user.username }} | 
+            Vehicles count: {{ vehicles|length }}
+        </small>
+    </div>
+    {% endif %}
+
+    <div class="list-group">
+    {% for v in vehicles %}
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <h5 class="mb-0 fw-bold">{{ v.plate_number }}</h5>
+                        {% if not v.approved %}
+                            <span class="badge bg-warning text-dark">Chờ duyệt</span>
+                        {% else %}
+                            <span class="badge bg-success">Đã duyệt</span>
+                        {% endif %}
+                        
+                        {% if v.in_parking %}
+                            <span class="badge bg-primary">
+                                <i class="bi bi-geo-alt-fill"></i> Đang trong bãi
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="bi bi-x-circle"></i> Không trong bãi
+                            </span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-truck"></i> {{ v.get_vehicle_type_display }}
+                        {% if v.color %}
+                            <span class="ms-2"><i class="bi bi-palette"></i> {{ v.color }}</span>
+                        {% endif %}
+                    </small>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="{% url 'customers:vehicle_detail' v.pk %}">
+                        <i class="bi bi-eye"></i> Chi tiết
+                    </a>
+                    
+                    <a class="btn btn-sm btn-warning" href="{% url 'customers:vehicle_edit' v.pk %}">
+                        <i class="bi bi-pencil"></i> Sửa
+                    </a>
+                    
+                    <a class="btn btn-sm btn-danger" href="{% url 'customers:vehicle_delete' v.pk %}"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa xe {{ v.plate_number }}?')">
+                        <i class="bi bi-trash"></i> Xóa
+                    </a>
+                    
+                    {% if v.approved %}
+                        {% if v.in_parking %}
+                            <a class="btn btn-sm btn-outline-danger" 
+                               href="{% url 'customers:vehicle_toggle_parking' v.pk %}"
+                               onclick="return confirm('Xác nhận xe {{ v.plate_number }} ra bãi?')">
+                                <i class="bi bi-box-arrow-right"></i> Ra bãi
+                            </a>
+                        {% else %}
+                            <a class="btn btn-sm btn-outline-success" 
+                               href="{% url 'customers:vehicle_toggle_parking' v.pk %}"
+                               onclick="return confirm('Xác nhận xe {{ v.plate_number }} vào bãi?')">
+                                <i class="bi bi-box-arrow-in-right"></i> Vào bãi
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="list-group-item text-center text-muted py-4">
+            <i class="bi bi-car-front" style="font-size: 48px; color: #dee2e6;"></i>
+            <p class="mt-3 mb-0">Bạn chưa đăng ký xe nào.</p>
+            <a class="btn btn-primary mt-2" href="{% url 'customers:vehicle_register' %}">
+                <i class="bi bi-plus-circle"></i> Đăng ký xe ngay
+            </a>
+        </div>
+    {% endfor %}
+    </div>
+    
+    <div class="mt-4">
+        <a class="btn btn-outline-secondary" href="{% url 'customers:dashboard' %}">
+            <i class="bi bi-arrow-left"></i> Trở về Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

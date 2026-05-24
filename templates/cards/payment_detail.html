@@ -1,0 +1,108 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+{% block dashboard_content %}
+<div class="container-fluid mt-4">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h4 class="mb-0"><i class="bi bi-receipt"></i> Biên lai #{{ payment.pk }}</h4>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p><strong>Phương tiện:</strong> 
+                {% if payment.vehicle %}
+                  {{ payment.vehicle.plate_number }}
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Khách hàng:</strong> 
+                {% if payment.customer %}
+                  {{ payment.customer.name }}
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </p>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <p><strong>Thời gian:</strong> {{ payment.check_in|date:"d/m/Y H:i" }} → {{ payment.check_out|date:"d/m/Y H:i"|default:"—" }}</p>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <p><strong>Tiền:</strong> {{ payment.amount|default:"0" }} VND</p>
+            </div>
+            <div class="col-md-4">
+              <p><strong>Thuế:</strong> {{ payment.tax|default:"0" }} VND</p>
+            </div>
+            <div class="col-md-4">
+              <p><strong>Tổng:</strong> <span class="text-primary fs-5">{{ payment.total|default:"0" }} VND</span></p>
+            </div>
+          </div>
+          
+          <hr>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p><strong>Phương thức thanh toán:</strong> {{ payment.get_method_display }}</p>
+            </div>
+            <div class="col-md-6">
+              <p><strong>Trạng thái:</strong> 
+                {% if payment.status == 'paid' %}
+                  <span class="badge bg-success">Đã thanh toán</span>
+                {% elif payment.status == 'cancelled' %}
+                  <span class="badge bg-danger">Đã hủy</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Chưa thanh toán</span>
+                {% endif %}
+              </p>
+            </div>
+          </div>
+
+          {% if payment.status != 'paid' and payment.status != 'cancelled' %}
+          <hr>
+          <div class="alert alert-info">
+            <h6><i class="bi bi-info-circle"></i> Xác nhận thanh toán</h6>
+            <form method="post" action="{% url 'cards:mark_paid' payment.pk %}">
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Phương thức thanh toán</label>
+                  <select name="method" class="form-select">
+                    <option value="cash">Tiền mặt</option>
+                    <option value="card">Thẻ</option>
+                    <option value="momo">MOMO</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-2">
+                  <label class="form-label">Mã tham chiếu (nếu có)</label>
+                  <input name="reference" class="form-control" placeholder="Nhập mã tham chiếu"/>
+                </div>
+              </div>
+              <button class="btn btn-success mt-2">
+                <i class="bi bi-check-circle"></i> Xác nhận thanh toán
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+        
+        <div class="card-footer">
+          <a class="btn btn-secondary" href="{% url 'cards:payment_list' %}">
+            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

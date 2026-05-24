@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}Chi tiết nhân viên - {{ employee.username }} - Hệ thống Quản lý Bãi Đỗ Xe{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-sidebar {
+        background-color: #2d3748;
+        min-height: 100vh;
+    }
+    .admin-sidebar .nav-link {
+        color: #cbd5e0;
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+    .admin-sidebar .nav-link:hover {
+        background-color: #4a5568;
+        color: white;
+    }
+    .admin-sidebar .nav-link.active {
+        background-color: #4299e1;
+        color: white;
+    }
+    .admin-sidebar .nav-link i {
+        margin-right: 0.5rem;
+    }
+    .admin-header {
+        background-color: #4299e1;
+        color: white;
+        padding: 1rem;
+    }
+    .detail-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        font-weight: bold;
+    }
+    .status-pending {
+        background-color: #fbd38d;
+        color: #744210;
+    }
+    .status-approved {
+        background-color: #9ae6b4;
+        color: #22543d;
+    }
+    .status-rejected {
+        background-color: #feb2b2;
+        color: #742a2a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-0">
+            <div class="p-3 text-center">
+                <h4 class="text-white">Admin Panel</h4>
+            </div>
+            <div class="px-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'employee_management' %}"><i class="fas fa-users"></i> Quản lý nhân viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-user-friends"></i> Quản lý khách hàng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-car"></i> Quản lý phương tiện</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-parking"></i> Quản lý bãi đỗ / vị trí đỗ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-money-bill-wave"></i> Quản lý thu phí</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-chart-bar"></i> Báo cáo - Thống kê</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'system_settings' %}"><i class="fas fa-cog"></i> Cài đặt hệ thống</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="document.getElementById('logout-form').submit(); return false;">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ml-sm-auto px-4">
+            <div class="admin-header d-flex justify-content-between align-items-center mb-4">
+                <h2 class="m-0">Chi tiết nhân viên - {{ employee.username }}</h2>
+                <a href="{% url 'employee_management' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="detail-card">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="mb-4">Thông tin cơ bản</h4>
+                        
+                        <div class="mb-3">
+                            <strong>Tên đăng nhập:</strong>
+                            <p>{{ employee.username }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Họ và tên:</strong>
+                            <p>{{ employee.full_name|default:"Chưa cung cấp" }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Email:</strong>
+                            <p>{{ employee.email|default:"Chưa cung cấp" }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Số điện thoại:</strong>
+                            <p>{{ employee.phone_number|default:"Chưa cung cấp" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h4 class="mb-4">Thông tin tài khoản</h4>
+                        
+                        <div class="mb-3">
+                            <strong>Vai trò:</strong>
+                            <p><span class="badge badge-info">Nhân viên</span></p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Trạng thái:</strong>
+                            <p>
+                                <span class="status-badge status-{{ employee.status }}">
+                                    {% if employee.status == 'pending' %}
+                                        Chờ xác thực
+                                    {% elif employee.status == 'approved' %}
+                                        Đã xác thực
+                                    {% elif employee.status == 'rejected' %}
+                                        Đã từ chối
+                                    {% endif %}
+                                </span>
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Đã xác thực:</strong>
+                            <p>
+                                {% if employee.is_verified %}
+                                    <span class="badge badge-success">Có</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Chưa</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Ngày tạo tài khoản:</strong>
+                            <p>{{ employee.date_joined|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <strong>Lần đăng nhập cuối:</strong>
+                            <p>{{ employee.last_login|date:"d/m/Y H:i"|default:"Chưa đăng nhập" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a href="{% url 'employee_update' employee.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </a>
+                        
+                        {% if employee.status == 'pending' %}
+                            <form method="post" action="{% url 'approve_employee' employee.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success ml-2">
+                                    <i class="fas fa-check"></i> Chấp nhận
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'reject_employee' employee.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning ml-2">
+                                    <i class="fas fa-times"></i> Từ chối
+                                </button>
+                            </form>
+                        {% elif employee.status == 'approved' %}
+                            <form method="post" action="{% url 'reject_employee' employee.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning ml-2">
+                                    <i class="fas fa-times"></i> Hủy xác thực
+                                </button>
+                            </form>
+                        {% elif employee.status == 'rejected' %}
+                            <form method="post" action="{% url 'approve_employee' employee.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success ml-2">
+                                    <i class="fas fa-check"></i> Chấp nhận
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    
+                    <a href="{% url 'employee_delete' employee.id %}" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Xóa tài khoản
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

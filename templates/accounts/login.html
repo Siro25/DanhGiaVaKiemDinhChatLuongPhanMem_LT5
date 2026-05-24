@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng nhập - Hệ thống Quản lý Bãi Đỗ Xe{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: #24242b; }
+    .auth-container { max-width: 720px; margin: 60px auto; }
+    .auth-card { background: #353543; border-radius: 8px; padding: 32px 36px; color: #fff; }
+    .auth-title { text-align: center; font-size: 32px; font-weight: 700; color: #f0a15f; margin-bottom: 24px; }
+    .auth-input { background: #2b2b33; border: 1px solid #4a4a58; color: #fff; height: 46px; }
+    .auth-input:focus { background: #2b2b33; color: #fff; border-color: #f0a15f; box-shadow: none; }
+    .auth-btn { background: #f0a15f; border: none; height: 44px; font-weight: 600; }
+    .auth-tabs { display: flex; justify-content: center; gap: 32px; margin-bottom: 16px; }
+    .auth-tab { color: #f0a15f; text-decoration: none; }
+    .auth-tab:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-tabs">
+        <a class="auth-tab" href="{% url 'signup' %}">Sign up</a>
+        <a class="auth-tab" href="{% url 'login' %}">Login</a>
+    </div>
+    <div class="auth-card">
+        <div class="auth-title">Login</div>
+        
+        <form method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <div class="mb-3">
+                {{ form.identifier.label_tag }}
+                {{ form.identifier }}
+                {% if form.identifier.errors %}
+                    <div class="text-danger small">{{ form.identifier.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control auth-input" id="email" name="email" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control auth-input" id="password" name="password" required>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn auth-btn">Login</button>
+            </div>
+            <div class="mt-3 text-center">
+                <p class="text-muted small">Hoặc chuyển sang giao diện:</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{% url 'admin_login' %}" class="btn btn-outline-light">Giao diện Admin</a>
+                    <a href="{% url 'user_login' %}" class="btn btn-outline-light">Giao diện Khách hàng</a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

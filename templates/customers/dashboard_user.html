@@ -1,0 +1,232 @@
+{% extends 'customers/customer_base.html' %}
+{% block title %}Dashboard - Khách hàng{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Palette */
+:root{
+  --primary:#ff8a00;
+  --muted:#6c757d;
+  --card-bg:#ffffff;
+  --surface:#f7f7f9;
+}
+
+/* Page layout */
+.khachhang-wrap{max-width:1100px;margin:0 auto;padding:0 16px;}
+.header-user{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.user-info h3{margin:0;font-weight:700}
+.user-info p{margin:0;color:var(--muted)}
+
+/* Cards */
+.card-clean{background:var(--card-bg);border:0;border-radius:10px;box-shadow:0 6px 18px rgba(20,20,50,0.06);padding:20px}
+.status-badge{display:inline-flex;align-items:center;gap:8px;font-weight:600}
+.status-ok{color:green}
+.status-no{color:#d9534f}
+
+/* Action buttons column */
+.actions .btn{border-radius:8px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:12px}
+.btn-qr{border:2px solid rgba(0,123,255,0.12);color:#0d6efd;background:#fff}
+.btn-highlight{background:linear-gradient(90deg,var(--primary),#ffb366);color:#fff;border:0}
+
+/* Small card items */
+.meta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.meta-item{background:var(--surface);padding:8px 12px;border-radius:8px;font-size:14px;color:#333}
+
+/* Vehicle Card Styles */
+.vehicle-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.vehicle-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.vehicle-details {
+  margin-top: 12px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.detail-row i {
+  font-size: 16px;
+  width: 20px;
+}
+
+.detail-row span {
+  min-width: 80px;
+}
+
+/* Badge styles */
+.badge {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width:767px){
+  .header-user{flex-direction:column;align-items:flex-start;gap:12px}
+  .actions .btn{font-size:14px}
+  
+  .vehicle-card {
+    padding: 15px !important;
+  }
+  
+  .vehicle-card .d-flex {
+    flex-direction: column;
+  }
+  
+  .vehicle-card .ms-3 {
+    margin-left: 0 !important;
+    margin-top: 12px;
+    width: 100%;
+  }
+  
+  .vehicle-card .btn {
+    width: 100%;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="khachhang-wrap">
+  <!-- Thông báo -->
+  {% if notifications %}
+  <div class="mb-4">
+    {% for notification in notifications %}
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <h5 class="alert-heading">
+        <i class="bi bi-check-circle-fill me-2"></i>{{ notification.title }}
+      </h5>
+      <p class="mb-0">{{ notification.message }}</p>
+      <small class="text-muted d-block mt-2">{{ notification.created_at|date:"d/m/Y H:i" }}</small>
+      <a href="{% url 'customers:mark_notification_read' notification.pk %}" class="btn btn-sm btn-outline-success mt-2">
+        Đánh dấu đã đọc
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="header-user">
+    <div class="user-info">
+      <h3>Xin chào, {{ request.user.get_full_name|default:request.user.username }}</h3>
+      <p class="text-muted">Tổng quan gửi xe của bạn</p>
+    </div>
+    <div>
+      <a class="btn btn-outline-secondary" href="{% url 'customers:vehicles' %}">Xe của tôi</a>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12">
+      <div class="card-clean">
+        <h5 class="mb-3">Trạng thái gửi xe</h5>
+
+        {% if current_parking %}
+          <div class="status-badge status-ok mb-2"><i class="bi bi-check-circle-fill"></i> Đang gửi xe</div>
+          <div class="meta-row">
+            <div class="meta-item"><strong>Biển số:</strong> {{ current_parking.vehicle.plate_number }}</div>
+            <div class="meta-item"><strong>Loại xe:</strong> {{ current_parking.vehicle.get_vehicle_type_display }}</div>
+            <div class="meta-item"><strong>Vào lúc:</strong> {{ current_parking.entry_time|date:"d/m/Y H:i" }}</div>
+            <div class="meta-item"><strong>Bãi:</strong> {{ current_parking.parking_lot.name }}</div>
+          </div>
+          <div class="mt-3">
+            <a class="btn btn-danger" href="{% url 'customers:vehicle_toggle_parking' current_parking.vehicle.id %}"
+               onclick="return confirm('Xác nhận xe {{ current_parking.vehicle.plate_number }} ra bãi?')">
+              <i class="bi bi-box-arrow-right"></i> Ra bãi
+            </a>
+          </div>
+        {% else %}
+          <div class="status-badge status-no"><i class="bi bi-x-circle-fill"></i> Không có xe trong bãi</div>
+          <p class="text-muted mt-3">Bạn có thể vào "Xe của tôi" để quản lý biển số hoặc cho xe vào bãi.</p>
+        {% endif %}
+        
+        <!-- Xe đã đăng ký -->
+        <hr class="my-4">
+        <h6 class="mb-3">
+          <i class="bi bi-car-front-fill text-primary"></i> Xe đã đăng ký
+        </h6>
+        <div class="mt-2">
+          {% if vehicles %}
+            {% for v in vehicles %}
+              <div class="vehicle-card mb-3 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                      <h5 class="mb-0 fw-bold text-primary">{{ v.plate_number }}</h5>
+                      {% if v.approved %}
+                        <span class="badge bg-success">
+                          <i class="bi bi-check-circle-fill"></i> Đã duyệt
+                        </span>
+                      {% else %}
+                        <span class="badge bg-warning text-dark">
+                          <i class="bi bi-clock-fill"></i> Chờ duyệt
+                        </span>
+                      {% endif %}
+                    </div>
+                    
+                    <div class="vehicle-details">
+                      <div class="detail-row">
+                        <i class="bi bi-truck text-muted"></i>
+                        <span class="text-muted">Loại xe:</span>
+                        <strong>{{ v.get_vehicle_type_display }}</strong>
+                      </div>
+                      {% if v.color %}
+                      <div class="detail-row">
+                        <i class="bi bi-palette text-muted"></i>
+                        <span class="text-muted">Màu sắc:</span>
+                        <strong>{{ v.color }}</strong>
+                      </div>
+                      {% endif %}
+                      {% if v.check_in %}
+                      <div class="detail-row">
+                        <i class="bi bi-calendar-check text-muted"></i>
+                        <span class="text-muted">Ngày đăng ký:</span>
+                        <strong>{{ v.check_in|date:"d/m/Y" }}</strong>
+                      </div>
+                      {% endif %}
+                    </div>
+                  </div>
+                  
+                  <div class="ms-3">
+                    <a class="btn btn-outline-primary btn-sm" href="{% url 'customers:vehicle_detail' v.pk %}">
+                      <i class="bi bi-eye"></i> Xem chi tiết
+                    </a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+            <div class="text-center mt-3">
+              <a href="{% url 'customers:vehicles' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-list-ul"></i> Xem tất cả xe
+              </a>
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="bi bi-car-front" style="font-size: 48px; color: #dee2e6;"></i>
+              <p class="text-muted mt-3 mb-0">Bạn chưa đăng ký xe nào.</p>
+              <a href="{% url 'customers:vehicle_register' %}" class="btn btn-primary btn-sm mt-2">
+                <i class="bi bi-plus-circle"></i> Đăng ký xe ngay
+              </a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

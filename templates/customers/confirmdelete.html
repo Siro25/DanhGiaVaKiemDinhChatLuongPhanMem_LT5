@@ -1,0 +1,54 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block title %}Xác nhận xóa{% endblock %}
+
+{% block dashboard_content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Xác nhận xóa khách hàng</h5>
+        </div>
+        <div class="card-body">
+            {% if vehicles_count > 0 %}
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Không thể xóa:</strong> Khách hàng này còn {{ vehicles_count }} phương tiện đang gửi. Vui lòng xóa tất cả phương tiện trước khi xóa khách hàng.
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Cảnh báo:</strong> Bạn có chắc chắn muốn xóa khách hàng này?
+            </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <strong>Tên khách hàng:</strong> {{ customer.name }}<br>
+                <strong>Số điện thoại:</strong> {{ customer.phone }}<br>
+                <strong>Loại khách:</strong> {{ customer.customer_type }}
+                {% if vehicles_count > 0 %}
+                <br><strong>Số phương tiện:</strong> <span class="text-danger">{{ vehicles_count }} xe</span>
+                {% endif %}
+            </div>
+            
+            {% if vehicles_count > 0 %}
+            <a href="{% url 'customers:customer_detail' customer.pk %}" class="btn btn-primary">
+                <i class="fas fa-arrow-left"></i> Quay lại xem chi tiết
+            </a>
+            <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Về danh sách
+            </a>
+            {% else %}
+            <form method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Xác nhận xóa
+                </button>
+                <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Hủy
+                </a>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

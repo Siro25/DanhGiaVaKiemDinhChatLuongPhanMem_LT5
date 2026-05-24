@@ -1,0 +1,262 @@
+{% extends 'customers/customer_base.html' %}
+{% load static %}
+
+{% block title %}Ví của tôi{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Thông tin ví -->
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="text-white">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="text-white-50 mb-2">Số dư ví</h5>
+                                <h1 class="display-4 fw-bold mb-0">{{ wallet.balance|floatformat:0 }} <small class="fs-4">VNĐ</small></h1>
+                            </div>
+                            <i class="bi bi-wallet2 display-1 opacity-25"></i>
+                        </div>
+                        <div class="d-flex gap-2 mt-4">
+                            <a href="{% url 'customers:wallet_deposit' %}" class="btn btn-light btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>Nạp tiền
+                            </a>
+                            <a href="{% url 'customers:subscribe_monthly' %}" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-calendar-check me-2"></i>Mua gói tháng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông tin nợ -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-lg border-0 h-100">
+                <div class="card-body p-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="text-white">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="text-white-50 mb-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Tổng nợ
+                                </h5>
+                                <h1 class="display-5 fw-bold mb-0">{{ total_debt|floatformat:0 }} <small class="fs-5">VNĐ</small></h1>
+                            </div>
+                        </div>
+                        {% if total_debt > 0 %}
+                        <div class="mt-3">
+                            <p class="mb-2 small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                {{ unpaid_records.count }} lần gửi xe chưa thanh toán
+                            </p>
+                            <button class="btn btn-light btn-sm w-100" data-bs-toggle="modal" data-bs-target="#debtModal">
+                                <i class="bi bi-list-ul me-1"></i>Xem chi tiết
+                            </button>
+                        </div>
+                        {% else %}
+                        <div class="mt-3">
+                            <p class="mb-0 small">
+                                <i class="bi bi-check-circle me-1"></i>
+                                Không có khoản nợ nào
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Lịch sử giao dịch -->
+        <div class="col-md-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Lịch sử giao dịch
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if transactions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Loại giao dịch</th>
+                                        <th>Số tiền</th>
+                                        <th>Số dư sau</th>
+                                        <th>Trạng thái</th>
+                                        <th>Mô tả</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trans in transactions %}
+                                    <tr>
+                                        <td>
+                                            <small class="text-muted">{{ trans.created_at|date:"d/m/Y H:i" }}</small>
+                                        </td>
+                                        <td>
+                                            {% if trans.transaction_type == 'deposit' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-arrow-down-circle me-1"></i>Nạp tiền
+                                                </span>
+                                            {% elif trans.transaction_type == 'payment' %}
+                                                <span class="badge bg-primary">
+                                                    <i class="bi bi-credit-card me-1"></i>Thanh toán
+                                                </span>
+                                            {% elif trans.transaction_type == 'refund' %}
+                                                <span class="badge bg-info">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Hoàn tiền
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="bi bi-arrow-up-circle me-1"></i>Rút tiền
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if trans.transaction_type == 'deposit' or trans.transaction_type == 'refund' %}
+                                                <span class="text-success fw-bold">+{{ trans.amount|floatformat:0 }}</span>
+                                            {% else %}
+                                                <span class="text-danger fw-bold">-{{ trans.amount|floatformat:0 }}</span>
+                                            {% endif %}
+                                            <small class="text-muted">VNĐ</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold">{{ trans.balance_after|floatformat:0 }}</span>
+                                            <small class="text-muted">VNĐ</small>
+                                        </td>
+                                        <td>
+                                            {% if trans.status == 'completed' %}
+                                                <span class="badge bg-success">Thành công</span>
+                                            {% elif trans.status == 'pending' %}
+                                                <span class="badge bg-warning">Đang xử lý</span>
+                                            {% elif trans.status == 'failed' %}
+                                                <span class="badge bg-danger">Thất bại</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Đã hủy</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">{{ trans.description|default:"-" }}</small>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <p class="text-muted mt-3">Chưa có giao dịch nào</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal chi tiết nợ -->
+<div class="modal fade" id="debtModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Chi tiết các khoản nợ
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if unpaid_records %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>STT</th>
+                                <th>Biển số</th>
+                                <th>Bãi xe</th>
+                                <th>Giờ vào</th>
+                                <th>Giờ ra</th>
+                                <th class="text-end">Phí (VNĐ)</th>
+                                <th class="text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in unpaid_records %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>
+                                    <strong class="text-primary">{{ record.vehicle.plate_number }}</strong>
+                                </td>
+                                <td>{{ record.parking_lot.name }}</td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ record.entry_time|date:"d/m/Y H:i" }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ record.exit_time|date:"d/m/Y H:i" }}
+                                    </small>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-danger">{{ record.fee|floatformat:0 }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    <form method="post" action="{% url 'customers:pay_debt' record.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success" 
+                                                onclick="return confirm('Xác nhận thanh toán {{ record.fee|floatformat:0 }} VNĐ?')">
+                                            <i class="bi bi-check-circle me-1"></i>Thanh toán
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="6" class="text-end"><strong>Tổng cộng:</strong></td>
+                                <td class="text-end">
+                                    <strong class="text-danger fs-5">{{ total_debt|floatformat:0 }} VNĐ</strong>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Lưu ý:</strong> Vui lòng thanh toán các khoản nợ để tránh bị khóa tài khoản.
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle display-1 text-success"></i>
+                    <p class="text-muted mt-3">Không có khoản nợ nào</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                {% if total_debt > 0 %}
+                <form method="post" action="{% url 'customers:pay_all_debt' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success" 
+                            onclick="return confirm('Xác nhận thanh toán tất cả {{ total_debt|floatformat:0 }} VNĐ?')">
+                        <i class="bi bi-credit-card me-2"></i>Thanh toán tất cả
+                    </button>
+                </form>
+                <a href="{% url 'customers:wallet_deposit' %}" class="btn btn-primary">
+                    <i class="bi bi-wallet2 me-2"></i>Nạp tiền
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+{% block dashboard_content %}
+<div class="container mt-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>{{ page_title|default:"Quản lý khách hàng" }}</h3>
+    <div>
+      <span class="badge bg-primary">Tổng: {{ customers|length }} khách hàng</span>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+      <a class="nav-link {% if customer_type_filter == 'all' or not customer_type_filter %}active{% endif %}" 
+         href="?type=all{% if q %}&q={{ q }}{% endif %}">
+        Tất cả
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if customer_type_filter == 'monthly' %}active{% endif %}" 
+         href="?type=monthly{% if q %}&q={{ q }}{% endif %}">
+        Khách gửi tháng
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link {% if customer_type_filter == 'guest' %}active{% endif %}" 
+         href="?type=guest{% if q %}&q={{ q }}{% endif %}">
+        Khách vãng lai
+      </a>
+    </li>
+  </ul>
+
+  <!-- search form -->
+  <form method="get" class="row g-2 mb-3">
+    <input type="hidden" name="type" value="{{ customer_type_filter|default:'all' }}">
+    <div class="col-md-10">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Tìm kiếm khách hàng (tên, số điện thoại, địa chỉ...)">
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-primary w-100" type="submit">
+        <i class="bi bi-search"></i> Tìm
+      </button>
+    </div>
+  </form>
+  <div>
+  <a class="btn btn-success mb-3" href="{% url 'customers:customer_add' %}">
+    <i class="bi bi-plus-circle"></i> Thêm khách hàng
+  </a>
+  <div>
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-hover">
+        <thead class="table-light">
+          <tr>
+            <th>Tên khách hàng</th>
+            <th>Số điện thoại</th>
+            <th>Email</th>
+            <th>Loại xe</th>
+            <th>Ngày hết hạn</th>
+            <th>Trạng thái</th>
+            <th>Hành động</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in customers %}
+          <tr>
+            <td>
+              <strong>{{ c.name }}</strong>
+              {% if c.user %}
+                <br><small class="text-muted">@{{ c.user.username }}</small>
+              {% endif %}
+            </td>
+            <td>{{ c.phone }}</td>
+            <td>
+              {% if c.email %}
+                <a href="mailto:{{ c.email }}">{{ c.email }}</a>
+              {% else %}
+                <span class="text-muted">-</span>
+              {% endif %}
+            </td>
+            <td>{% if c.latest_vehicle_type_display %}{{ c.latest_vehicle_type_display }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+            <td>
+              {% if c.subscription_end %}
+                {{ c.subscription_end|date:"d/m/Y" }}
+              {% else %}
+                <span class="text-muted">Chưa đăng ký</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if c.customer_type == 'Khách gửi tháng' %}
+                {% if c.subscription_status == 'Còn hạn' %}
+                  <span class="badge bg-success">🟢 Còn hạn</span>
+                {% elif c.subscription_status == 'Hết hạn' %}
+                  <span class="badge bg-danger">� Hết hạn</span>
+                {% else %}
+                  <span class="badge bg-warning">🟡 Chưa đăng ký</span>
+                {% endif %}
+              {% else %}
+                <span class="badge bg-info">🔵 Khách vãng lai</span>
+              {% endif %}
+            </td>
+            </td>
+            <td>
+              <div class="btn-group" role="group">
+                <a class="btn btn-sm btn-outline-info" href="{% url 'customers:customer_detail' c.pk %}" 
+                   title="Xem chi tiết khách hàng">
+                  <i class="bi bi-eye"></i> Xem
+                </a>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'customers:customer_edit' c.pk %}"
+                   title="Chỉnh sửa thông tin khách hàng">
+                  <i class="bi bi-pencil"></i> Sửa
+                </a>
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'customers:customer_delete' c.pk %}" 
+                   title="Xóa khách hàng">
+                  <i class="bi bi-trash"></i> Xóa
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-4">
+              <i class="bi bi-person-x" style="font-size: 2rem;"></i>
+              <br>Chưa có khách hàng gửi tháng nào
+              {% if q %}
+              <br><small>Không tìm thấy kết quả cho "{{ q }}"</small>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Quản lý phương tiện (Đăng ký tháng){% endblock %}
+
+{% block admin_content %}
+<div class="container mt-3">
+
+  <!-- INFO ALERT -->
+  <div class="alert alert-info mb-3">
+    <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong> Trang này chỉ hiển thị các phương tiện của khách hàng đăng ký gửi xe theo tháng.
+  </div>
+
+  <!-- EMPLOYEE STATS -->
+  {% if employee_stats %}
+  <div class="card mb-3">
+    <div class="card-header">
+      <i class="fas fa-chart-bar"></i> Thống kê đăng ký theo nhân viên
+    </div>
+    <div class="card-body">
+      <div class="row">
+        {% for stat in employee_stats %}
+        <div class="col-md-6 col-lg-3 mb-2">
+          <div class="p-3 bg-light rounded">
+            <strong>{{ stat.employee.full_name|default:stat.employee.username }}</strong>
+            <br><span class="text-primary">{{ stat.monthly_registrations }} đăng ký tháng</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- FILTER ROW -->
+  <form method="get" class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label for="q" class="form-label">Tìm kiếm</label>
+          {{ form.q }}
+        </div>
+        <div class="col-md-3">
+          <label for="vehicle_type" class="form-label">Loại xe</label>
+          {{ form.vehicle_type }}
+        </div>
+        <div class="col-md-3">
+          <label for="owner" class="form-label">Chủ xe</label>
+          {{ form.owner }}
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <div class="d-grid">
+            <button class="btn btn-primary">
+              <i class="fas fa-search"></i> Lọc
+            </button>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label for="date_from" class="form-label">Từ ngày</label>
+          {{ form.date_from }}
+        </div>
+        <div class="col-md-3">
+          <label for="date_to" class="form-label">Đến ngày</label>
+          {{ form.date_to }}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">&nbsp;</label>
+          <div>
+            <!-- Removed "Thêm phương tiện" button as requested -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- TABLE -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Biển số</th>
+        <th>Loại</th>
+        <th>Chủ</th>
+        <th>Vào</th>
+        <th>Hết hạn đăng ký</th>
+        <th>Trạng thái đăng ký</th>
+        <th>Vị trí</th>
+        <th>Màu</th>
+        <th>Nhân viên đăng ký <i class="fas fa-info-circle text-muted" title="Nhân viên đã đăng ký gói tháng cho khách hàng này"></i></th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in page_obj.object_list %}
+        <tr>
+          <td>{{ v.plate_number }}</td>
+          <td>{{ v.get_vehicle_type_display }}</td>
+          <td>{% if v.customer %}{{ v.customer.name }}{% else %}-{% endif %}</td>
+          <td>{{ v.check_in|time:"H:i d/m/Y" }}</td>
+          <td>
+            {% if v.subscription_end %}
+              {{ v.subscription_end|date:"d/m/Y" }}
+            {% else %}
+              <span class="text-muted">Chưa đăng ký</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if v.subscription_status %}
+              {% if v.subscription_status == 'Còn hạn' %}
+                <span class="badge bg-success">{{ v.subscription_status }}</span>
+              {% elif v.subscription_status == 'Hết hạn' %}
+                <span class="badge bg-danger">{{ v.subscription_status }}</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ v.subscription_status }}</span>
+              {% endif %}
+            {% else %}
+              <span class="text-muted">Chưa có gói</span>
+            {% endif %}
+          </td>
+          <td>{{ v.parking_slot|default:'-' }}</td>
+          <td>{{ v.color|default:'-' }}</td>
+          <td>
+            {% if v.created_by %}
+              <span class="badge bg-primary" title="Nhân viên đăng ký">
+                <i class="fas fa-user"></i> {{ v.created_by.full_name|default:v.created_by.username }}
+              </span>
+            {% else %}
+              <span class="text-muted">Chưa có thông tin</span>
+            {% endif %}
+          </td>
+          <td>
+            <a class="btn btn-sm btn-outline-info" href="{% url 'vehicles:vehicle_detail' v.pk %}" title="Xem">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'vehicles:vehicle_edit' v.pk %}" title="Sửa">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'vehicles:vehicle_delete' v.pk %}" title="Xóa">
+              <i class="bi bi-trash"></i>
+            </a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="10">Không có phương tiện nào (chỉ hiển thị xe đăng ký tháng)</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- PAGINATION -->
+  <nav aria-label="Page navigation">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ base_qs }}">Trước</a>
+        </li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ base_qs }}">Tiếp</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <button class="btn btn-info mb-3" onclick="exportVehiclesData()">
+    <i class="fas fa-download"></i> Xuất Excel
+  </button>
+
+</div>
+
+<script>
+function exportVehiclesData() {
+    // Get current filter parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const q = urlParams.get('q') || '';
+    const vehicle_type = urlParams.get('vehicle_type') || '';
+    const owner = urlParams.get('owner') || '';
+    const date_from = urlParams.get('date_from') || '';
+    const date_to = urlParams.get('date_to') || '';
+    
+    // Create export URL with current parameters
+    let exportUrl = "{% url 'vehicles:export_vehicles_excel' %}";
+    const params = new URLSearchParams();
+    
+    if (q) params.append('q', q);
+    if (vehicle_type) params.append('vehicle_type', vehicle_type);
+    if (owner) params.append('owner', owner);
+    if (date_from) params.append('date_from', date_from);
+    if (date_to) params.append('date_to', date_to);
+    
+    if (params.toString()) {
+        exportUrl += '?' + params.toString();
+    }
+    
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xuất...';
+    btn.disabled = true;
+    
+    // Download file
+    window.open(exportUrl, '_blank');
+    
+    // Reset button after 2 seconds
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+
+// Date validation
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFromInput = document.getElementById('id_date_from');
+    const dateToInput = document.getElementById('id_date_to');
+    
+    if (dateFromInput && dateToInput) {
+        // Set max date to today
+        const today = new Date().toISOString().split('T')[0];
+        dateFromInput.max = today;
+        dateToInput.max = today;
+        
+        // Validate date range
+        function validateDateRange() {
+            const dateFrom = dateFromInput.value;
+            const dateTo = dateToInput.value;
+            
+            if (dateFrom && dateTo && dateFrom > dateTo) {
+                dateToInput.setCustomValidity('Ngày kết thúc phải sau ngày bắt đầu');
+                dateToInput.reportValidity();
+            } else {
+                dateToInput.setCustomValidity('');
+            }
+        }
+        
+        dateFromInput.addEventListener('change', function() {
+            if (this.value) {
+                dateToInput.min = this.value;
+            }
+            validateDateRange();
+        });
+        
+        dateToInput.addEventListener('change', validateDateRange);
+    }
+});
+</script>
+{% endblock %}

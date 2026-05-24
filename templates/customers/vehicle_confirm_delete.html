@@ -1,0 +1,54 @@
+{% extends 'customers/customer_base.html' %}
+{% block title %}Xác nhận xóa{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm p-4" style="max-width:600px;margin:0 auto;">
+    <div class="text-center mb-4">
+      <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 64px;"></i>
+    </div>
+    
+    <h4 class="mb-3 text-center">Xác nhận xóa phương tiện</h4>
+    
+    <div class="alert alert-warning">
+      <strong><i class="bi bi-info-circle"></i> Cảnh báo:</strong> 
+      Hành động này không thể hoàn tác!
+    </div>
+    
+    <div class="card bg-light mb-3">
+      <div class="card-body">
+        <h5 class="card-title text-primary">{{ vehicle.plate_number }}</h5>
+        <p class="card-text mb-1">
+          <strong>Loại xe:</strong> {{ vehicle.get_vehicle_type_display }}
+        </p>
+        {% if vehicle.color %}
+        <p class="card-text mb-1">
+          <strong>Màu sắc:</strong> {{ vehicle.color }}
+        </p>
+        {% endif %}
+        <p class="card-text mb-0">
+          <strong>Trạng thái:</strong> 
+          {% if vehicle.approved %}
+            <span class="badge bg-success">Đã duyệt</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Chờ duyệt</span>
+          {% endif %}
+        </p>
+      </div>
+    </div>
+    
+    <p class="text-center mb-4">Bạn có chắc chắn muốn xóa phương tiện này không?</p>
+    
+    <form method="post">
+      {% csrf_token %}
+      <div class="d-grid gap-2">
+        <button class="btn btn-danger btn-lg" type="submit">
+          <i class="bi bi-trash"></i> Xác nhận xóa
+        </button>
+        <a class="btn btn-outline-secondary btn-lg" href="{% url 'customers:vehicles' %}">
+          <i class="bi bi-x-circle"></i> Hủy bỏ
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

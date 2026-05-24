@@ -1,0 +1,221 @@
+{% extends 'customers/customer_base.html' %}
+{% load static %}
+{% load customer_filters %}
+
+{% block title %}Lịch sử{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">
+                <i class="bi bi-clock-history me-2"></i>
+                Lịch sử hoạt động
+            </h2>
+        </div>
+    </div>
+
+    <!-- Danh sách xe và trạng thái gói tháng -->
+    {% if vehicles %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-card-list me-2"></i>
+                        Danh sách xe và gói đăng ký
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for vehicle in vehicles %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 {% if vehicle.id in vehicle_subscriptions %}border-primary{% endif %}">
+                                <div class="card-body">
+                                    <h6 class="card-title">
+                                        <i class="bi bi-{% if vehicle.vehicle_type == 'car' %}car-front{% elif vehicle.vehicle_type == 'motorcycle' %}bicycle{% else %}truck{% endif %} me-2"></i>
+                                        <strong>{{ vehicle.plate_number }}</strong>
+                                    </h6>
+                                    <p class="card-text mb-2">
+                                        <small class="text-muted">
+                                            Loại xe: {{ vehicle.get_vehicle_type_display }}
+                                            <br>
+                                            Màu: {{ vehicle.color }}
+                                        </small>
+                                    </p>
+                                    
+                                    {% if vehicle.id in vehicle_subscriptions %}
+                                        {% with sub_info=vehicle_subscriptions|get_item:vehicle.id %}
+                                        <hr>
+                                        <div class="mt-2">
+                                            {% if sub_info.status == 'active' %}
+                                                <!-- Gói đang hoạt động -->
+                                                <div class="alert alert-success mb-2 p-2">
+                                                    <strong><i class="bi bi-check-circle-fill me-1"></i> Gói tháng đang hoạt động</strong>
+                                                </div>
+                                                <p class="mb-1"><small><i class="bi bi-calendar-event"></i> Từ: {{ sub_info.subscription.start_date|date:"d/m/Y" }}</small></p>
+                                                <p class="mb-1"><small><i class="bi bi-calendar-x"></i> Đến: {{ sub_info.subscription.end_date|date:"d/m/Y" }}</small></p>
+                                                
+                                                {% if sub_info.is_expiring_soon %}
+                                                <div class="alert alert-warning mb-0 p-2 mt-2">
+                                                    <small><i class="bi bi-exclamation-triangle-fill"></i> Còn {{ sub_info.days_left }} ngày (sắp hết hạn)</small>
+                                                </div>
+                                                {% else %}
+                                                <p class="mb-0 text-success"><small><i class="bi bi-hourglass-split"></i> Còn {{ sub_info.days_left }} ngày</small></p>
+                                                {% endif %}
+                                            {% elif sub_info.status == 'expired' %}
+                                                <!-- Gói đã hết hạn -->
+                                                <div class="alert alert-danger mb-2 p-2">
+                                                    <strong><i class="bi bi-x-circle-fill me-1"></i> Gói tháng đã hết hạn</strong>
+                                                </div>
+                                                <p class="mb-1"><small><i class="bi bi-calendar-event"></i> Từ: {{ sub_info.subscription.start_date|date:"d/m/Y" }}</small></p>
+                                                <p class="mb-2"><small><i class="bi bi-calendar-x"></i> Đến: {{ sub_info.subscription.end_date|date:"d/m/Y" }}</small></p>
+                                                <a href="{% url 'customers:subscribe_monthly' %}" class="btn btn-sm btn-primary w-100">
+                                                    <i class="bi bi-arrow-repeat"></i> Gia hạn ngay
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                        {% endwith %}
+                                    {% else %}
+                                        <!-- Chưa có gói tháng -->
+                                        <hr>
+                                        <div class="alert alert-light mb-2 p-2">
+                                            <small class="text-muted"><i class="bi bi-info-circle"></i> Chưa đăng ký gói tháng</small>
+                                        </div>
+                                        <a href="{% url 'customers:subscribe_monthly' %}" class="btn btn-sm btn-outline-primary w-100">
+                                            <i class="bi bi-plus-circle"></i> Đăng ký gói tháng
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lịch sử gửi xe -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-car-front me-2"></i>
+                        Lịch sử gửi xe
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Biển số</th>
+                                    <th>Gói tháng</th>
+                                    <th>Bãi xe</th>
+                                    <th>Giờ vào</th>
+                                    <th>Giờ ra</th>
+                                    <th>Thời gian</th>
+                                    <th>Phí (VNĐ)</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in records %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        <strong>{{ r.vehicle.plate_number }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ r.vehicle.get_vehicle_type_display }}</small>
+                                    </td>
+                                    <td>
+                                        {% if r.vehicle.id in vehicle_subscriptions %}
+                                            {% with sub_info=vehicle_subscriptions|get_item:r.vehicle.id %}
+                                                {% if sub_info.status == 'active' %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-star-fill"></i> Gói tháng
+                                                </span>
+                                                {% else %}
+                                                <span class="badge bg-secondary">
+                                                    <i class="bi bi-clock-history"></i> Đã hết hạn
+                                                </span>
+                                                {% endif %}
+                                            {% endwith %}
+                                        {% else %}
+                                        <span class="badge bg-light text-dark">
+                                            <i class="bi bi-coin"></i> Vãng lai
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ r.parking_lot.name }}</td>
+                                    <td>{{ r.entry_time|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if r.exit_time %}
+                                        {{ r.exit_time|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                        <span class="badge bg-primary">
+                                            <i class="bi bi-geo-alt-fill"></i> Đang trong bãi
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if r.exit_time %}
+                                        {% widthratio r.exit_time|timeuntil:r.entry_time 3600 1 %} giờ
+                                        {% else %}
+                                        —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if r.fee %}
+                                        <strong class="text-success">{{ r.fee|floatformat:0 }}</strong>
+                                        {% else %}
+                                        —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if r.is_paid %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Đã thanh toán
+                                        </span>
+                                        {% elif r.exit_time %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> Chưa thanh toán
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-clock"></i> Đang gửi
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-car-front" style="font-size: 4rem; color: #ccc;"></i>
+                        <p class="text-muted mt-3 mb-0 fs-5">Chưa có lịch sử gửi xe</p>
+                        <p class="text-muted">Lịch sử gửi xe của bạn sẽ hiển thị tại đây</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút quay về -->
+    <div class="row">
+        <div class="col-12">
+            <a href="{% url 'customers:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Trở về Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

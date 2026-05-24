@@ -1,0 +1,97 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Quản lý thu phí{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-3">
+  <h3>Quản lý thu phí</h3>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+  <a class="btn btn-primary mb-3" href="{% url 'vehicles:vehicle_list' %}">Quay về phương tiện</a>
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-3">{{ form.q }}</div>
+    <div class="col-md-2">{{ form.status }}</div>
+    <div class="col-md-2">{{ form.method }}</div>
+    <div class="col-md-2">{{ form.date_from }}</div>
+    <div class="col-md-2">{{ form.date_to }}</div>
+    <div class="col-md-1 d-grid"><button class="btn btn-primary">Lọc</button></div>
+  </form>
+  <div class="row mb-3">
+    <div class="col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5>Tổng doanh thu hôm nay</h5>
+          <h3>{{ today_total|default:"0" }} VND</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5>Tổng doanh thu tuần này</h5>
+          <h3>{{ weekly_total|default:"0" }} VND</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <h5>Tổng doanh thu tháng này</h5>
+          <h3>{{ monthly_total|default:"0" }} VND</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+  <table class="table">
+    <thead>
+        <tr>
+          <th>#</th>
+          <th>Phương tiện</th>
+          <th>Khách</th>
+          <th>Thời gian vào/ra</th>
+          <th>Tổng</th>
+          <th>Phương thức</th>
+          <th>Trạng thái</th>
+          <th>Ngày tạo</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td>{{ p.pk }}</td>
+        <td>{% if p.vehicle %}{{ p.vehicle.plate_number }}{% else %}-{% endif %}</td>
+        <td>{% if p.customer %}{{ p.customer.name }}{% else %}-{% endif %}</td>
+        <td>{{ p.check_in|time:"H:i d/m" }} → {{ p.check_out|time:"H:i d/m"|default:"—" }}</td>
+        <td>{{ p.total }}</td>
+        <td>{{ p.get_method_display }}</td>
+          <td>
+            {% if p.status == 'paid' %}
+              <span class="badge bg-success">Đã thanh toán</span>
+          {% elif p.status == 'cancelled' %}
+              <span class="badge bg-danger">Hủy</span>
+          {% else %}
+            <span class="badge bg-warning">Chưa thanh toán</span>
+            {% endif %}
+          </td>
+        <td>{{ p.created_at|time:"H:i d/m/Y" }}</td>
+          <td>
+          <a class="btn btn-sm btn-outline-info" href="{% url 'cards:payment_detail' p.pk %}">Xem</a>
+            {% if p.status == 'pending' %}
+            <form method="post" action="{% url 'cards:cancel_payment' p.pk %}" style="display:inline;" onsubmit="return confirm('Hủy giao dịch?');">
+                {% csrf_token %}
+              <button class="btn btn-sm btn-outline-danger">Xóa</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+      <tr><td colspan="9">Chưa có giao dịch</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

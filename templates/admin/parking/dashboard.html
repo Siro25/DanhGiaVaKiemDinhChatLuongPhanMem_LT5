@@ -1,0 +1,293 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Bản đồ bãi xe{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+  <!-- Bản đồ bãi xe -->
+  <div class="card shadow">
+    <div class="card-header py-3">
+      <h6 class="m-0 font-weight-bold text-primary">
+        <i class="fas fa-map"></i> Bản đồ bãi xe
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <!-- Hiển thị từng bãi xe từ database -->
+        {% for lot in parking_lots %}
+        <div class="col-xl-4 col-lg-6 mb-4">
+          <div class="card h-100 parking-lot-card">
+            <div class="card-body">
+              <h5 class="card-title text-dark">{{ lot.name }}</h5>
+              <p class="card-text text-muted small">{{ lot.location|default:"Chưa có địa chỉ" }}</p>
+              
+              <!-- Hiển thị loại xe được phép -->
+              <div class="mb-2">
+                {% if lot.allowed_vehicle_types == 'small' %}
+                  <span class="badge badge-info">
+                    <i class="fas fa-motorcycle"></i> Xe nhỏ (Xe máy, Xe đạp)
+                  </span>
+                {% elif lot.allowed_vehicle_types == 'large' %}
+                  <span class="badge badge-primary">
+                    <i class="fas fa-car"></i> Xe to (Ô tô, Xe tải, Taxi)
+                  </span>
+                {% else %}
+                  <span class="badge badge-secondary">
+                    <i class="fas fa-layer-group"></i> Tất cả loại xe
+                  </span>
+                {% endif %}
+              </div>
+              
+              <div class="parking-status mb-3">
+                <span class="h4 text-dark">{{ lot.occupied_slots }} / {{ lot.total_slots }}</span>
+                <span class="text-muted"> vị trí đang dùng</span>
+              </div>
+              {% if lot.status == 'active' %}
+                {% if lot.occupancy_rate >= 90 %}
+                  <span class="badge badge-danger px-3 py-2">Đầy</span>
+                {% elif lot.occupancy_rate >= 70 %}
+                  <span class="badge badge-warning px-3 py-2">Sắp đầy</span>
+                {% else %}
+                  <span class="badge badge-success px-3 py-2">Hoạt động</span>
+                {% endif %}
+              {% elif lot.status == 'maintenance' %}
+                <span class="badge badge-warning px-3 py-2">Bảo trì</span>
+              {% elif lot.status == 'closed' %}
+                <span class="badge badge-secondary px-3 py-2">Đóng cửa</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Chưa có bãi xe nào. Vui lòng thêm bãi xe trong hệ thống.
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Thống kê tổng quan -->
+        <div class="col-xl-4 col-lg-12 mb-4">
+          <div class="card h-100 stats-card">
+            <div class="card-body">
+              <h5 class="card-title text-dark">Thống kê</h5>
+              <div class="stats-grid">
+                <div class="stat-item">
+                  <span class="stat-label">Tổng số bãi</span>
+                  <span class="stat-value">{{ parking_lots.count }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Tổng số chỗ</span>
+                  <span class="stat-value">{{ total_slots }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Đang dùng</span>
+                  <span class="stat-value">{{ occupied_slots }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">Còn trống</span>
+                  <span class="stat-value">{{ available_slots }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* Parking Lot Cards Styles */
+.parking-lot-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e3e6f0;
+  background: #ffffff;
+}
+
+.parking-lot-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  border-color: #4e73df;
+}
+
+.parking-lot-card .card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.parking-lot-card .card-text {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.parking-status {
+  margin: 1rem 0;
+}
+
+.parking-status .h4 {
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.stats-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.stats-card .card-title {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* Badge Styles */
+.badge {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.badge-success {
+  background-color: #1cc88a;
+  color: white;
+}
+
+.badge-danger {
+  background-color: #e74a3b;
+  color: white;
+}
+
+.badge-warning {
+  background-color: #f6c23e;
+  color: white;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .parking-lot-card .card-title {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .col-xl-4 {
+    margin-bottom: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1.1rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+}
+
+/* Animation for card hover effects */
+@keyframes cardPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.parking-lot-card:active {
+  animation: cardPulse 0.3s ease;
+}
+</style>
+
+<script>
+// Parking lot cards functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const parkingCards = document.querySelectorAll('.parking-lot-card');
+  
+  // Add click handlers for parking lot cards
+  parkingCards.forEach(card => {
+    card.addEventListener('click', function() {
+      const title = this.querySelector('.card-title').textContent;
+      const address = this.querySelector('.card-text').textContent;
+      const status = this.querySelector('.badge').textContent;
+      const occupancy = this.querySelector('.parking-status .h4').textContent;
+      
+      // Show detailed info (for demo)
+      alert(`${title}\nĐịa chỉ: ${address}\nTình trạng: ${occupancy}\nTrạng thái: ${status}`);
+    });
+    
+    // Add hover effect cursor
+    card.style.cursor = 'pointer';
+  });
+  
+  // Removed fake auto-update - now using real data from database only
+});
+
+function updateParkingStats() {
+  // Update stats in the stats card
+  const totalSlots = 300;
+  const currentOccupied = 165 + Math.floor(Math.random() * 20) - 10; // ±10 variation
+  const available = totalSlots - currentOccupied;
+
+// Enhanced click handling with visual feedback
+document.addEventListener('click', function(e) {
+  if (e.target.closest('.parking-lot-card')) {
+    const card = e.target.closest('.parking-lot-card');
+    // Add pulse effect on card click
+    card.style.transform = 'scale(0.98)';
+    setTimeout(() => {
+      card.style.transform = 'scale(1)';
+    }, 150);
+  }
+});
+</script>
+{% endblock %}

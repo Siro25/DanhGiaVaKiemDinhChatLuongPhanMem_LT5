@@ -1,0 +1,382 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý Nhân viên - Hệ thống Quản lý Bãi Đỗ Xe{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-sidebar {
+        background-color: #2d3748;
+        min-height: 100vh;
+    }
+    .admin-sidebar .nav-link {
+        color: #cbd5e0;
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+    .admin-sidebar .nav-link:hover {
+        background-color: #4a5568;
+        color: white;
+    }
+    .admin-sidebar .nav-link.active {
+        background-color: #4299e1;
+        color: white;
+    }
+    .admin-sidebar .nav-link i {
+        margin-right: 0.5rem;
+    }
+    .admin-header {
+        background-color: #4299e1;
+        color: white;
+        padding: 1rem;
+    }
+    .admin-content {
+        padding: 1.5rem;
+    }
+    .employee-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .status-pending {
+        background-color: #fbd38d;
+        color: #744210;
+    }
+    .status-approved {
+        background-color: #9ae6b4;
+        color: #22543d;
+    }
+    .status-rejected {
+        background-color: #feb2b2;
+        color: #742a2a;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-0">
+            <div class="p-3 text-center">
+                <h4 class="text-white">Admin Panel</h4>
+            </div>
+            <div class="px-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'employee_management' %}"><i class="fas fa-users"></i> Quản lý nhân viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'parking:dashboard' %}"><i class="fas fa-parking"></i> Quản lý bãi đỗ / vị trí đỗ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin_customer_management' %}"><i class="fas fa-user-friends"></i> Quản lý khách hàng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'vehicles:vehicle_list' %}"><i class="fas fa-car"></i> Quản lý phương tiện</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin_payment_management' %}"><i class="fas fa-money-bill-wave"></i> Quản lý thu phí</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'reports_dashboard' %}"><i class="fas fa-chart-bar"></i> Báo cáo - Thống kê</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'system_settings' %}"><i class="fas fa-cog"></i> Cài đặt hệ thống</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="document.getElementById('logout-form').submit(); return false;">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ml-sm-auto px-4">
+            <div class="admin-header d-flex justify-content-between align-items-center mb-4">
+                <h2 class="m-0">Quản lý Tài khoản Nhân viên</h2>
+                <a href="{% url 'employee_create' %}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Thêm nhân viên mới
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form method="get" class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="search">Tìm kiếm:</label>
+                                <input type="text" name="search" id="search" class="form-control" 
+                                       placeholder="Tìm theo tên đăng nhập, họ tên, email..." 
+                                       value="{{ search }}">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="status">Lọc theo trạng thái:</label>
+                                <select name="status" id="status" class="form-control">
+                                    <option value="">Tất cả</option>
+                                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Chờ xác thực</option>
+                                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Đã xác thực</option>
+                                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Đã từ chối</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#all" data-toggle="tab">Tất cả ({{ all_employees|length }})</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#pending" data-toggle="tab">Chờ xác thực ({{ pending_employees|length }})</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#approved" data-toggle="tab">Đã xác thực ({{ approved_employees|length }})</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#rejected" data-toggle="tab">Đã từ chối ({{ rejected_employees|length }})</a>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- All Employees Table -->
+                <div class="tab-pane fade show active" id="all">
+                    <div class="card">
+                        <div class="card-body">
+                            {% if all_employees %}
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-hover">
+                                        <thead class="thead-dark">
+                                            <tr>
+                                                <th>Tên đăng nhập</th>
+                                                <th>Họ và tên</th>
+                                                <th>Email</th>
+                                                <th>Số điện thoại</th>
+                                                <th>Trạng thái</th>
+                                                <th>Ngày tạo</th>
+                                                <th width="200">Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for employee in all_employees %}
+                                                <tr>
+                                                    <td>{{ employee.username }}</td>
+                                                    <td>{{ employee.full_name|default:"Chưa cung cấp" }}</td>
+                                                    <td>{{ employee.email|default:"Chưa cung cấp" }}</td>
+                                                    <td>{{ employee.phone_number|default:"Chưa cung cấp" }}</td>
+                                                    <td>
+                                                        <span class="status-badge status-{{ employee.status }}">
+                                                            {% if employee.status == 'pending' %}
+                                                                Chờ xác thực
+                                                            {% elif employee.status == 'approved' %}
+                                                                Đã xác thực
+                                                            {% elif employee.status == 'rejected' %}
+                                                                Đã từ chối
+                                                            {% endif %}
+                                                        </span>
+                                                    </td>
+                                                    <td>{{ employee.date_joined|date:"d/m/Y" }}</td>
+                                                    <td>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <a href="{% url 'employee_detail' employee.id %}" 
+                                                               class="btn btn-info btn-sm" title="Xem chi tiết">
+                                                                <i class="fas fa-eye"></i>
+                                                            </a>
+                                                            <a href="{% url 'employee_update' employee.id %}" 
+                                                               class="btn btn-primary btn-sm" title="Chỉnh sửa">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            {% if employee.status == 'pending' %}
+                                                                <form method="post" action="{% url 'approve_employee' employee.id %}" class="d-inline">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-success btn-sm" title="Chấp nhận">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>
+                                                                </form>
+                                                                <form method="post" action="{% url 'reject_employee' employee.id %}" class="d-inline">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-warning btn-sm" title="Từ chối">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+                                                                </form>
+                                                            {% elif employee.status == 'approved' %}
+                                                                <form method="post" action="{% url 'reject_employee' employee.id %}" class="d-inline">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-warning btn-sm" title="Hủy xác thực">
+                                                                        <i class="fas fa-times"></i>
+                                                                    </button>
+                                                                </form>
+                                                            {% elif employee.status == 'rejected' %}
+                                                                <form method="post" action="{% url 'approve_employee' employee.id %}" class="d-inline">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-success btn-sm" title="Chấp nhận">
+                                                                        <i class="fas fa-check"></i>
+                                                                    </button>
+                                                                </form>
+                                                            {% endif %}
+                                                            <a href="{% url 'employee_delete' employee.id %}" 
+                                                               class="btn btn-danger btn-sm" title="Xóa">
+                                                                <i class="fas fa-trash"></i>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    {% if search or status_filter %}
+                                        Không tìm thấy nhân viên nào phù hợp với điều kiện tìm kiếm.
+                                    {% else %}
+                                        Chưa có tài khoản nhân viên nào trong hệ thống.
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <!-- Pending Employees -->
+                <div class="tab-pane fade show active" id="pending">
+                    {% if pending_employees %}
+                        <div class="row">
+                            {% for employee in pending_employees %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="employee-card">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="m-0">{{ employee.full_name }}</h5>
+                                            <span class="status-badge status-pending">Chờ xác thực</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="mb-1"><strong>Username:</strong> {{ employee.username }}</p>
+                                            <p class="mb-1"><strong>Email:</strong> {{ employee.email }}</p>
+                                            <p class="mb-1"><strong>Số điện thoại:</strong> {{ employee.phone_number|default:"Chưa cung cấp" }}</p>
+                                            <p class="mb-1"><strong>Ngày đăng ký:</strong> {{ employee.date_joined|date:"d/m/Y" }}</p>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <form method="post" action="{% url 'approve_employee' employee.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success btn-sm">Chấp nhận</button>
+                                            </form>
+                                            <form method="post" action="{% url 'reject_employee' employee.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-danger btn-sm">Từ chối</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">Không có tài khoản nhân viên nào đang chờ xác thực.</div>
+                    {% endif %}
+                </div>
+
+                <!-- Approved Employees -->
+                <div class="tab-pane fade" id="approved">
+                    {% if approved_employees %}
+                        <div class="row">
+                            {% for employee in approved_employees %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="employee-card">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="m-0">{{ employee.full_name }}</h5>
+                                            <span class="status-badge status-approved">Đã xác thực</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="mb-1"><strong>Username:</strong> {{ employee.username }}</p>
+                                            <p class="mb-1"><strong>Email:</strong> {{ employee.email }}</p>
+                                            <p class="mb-1"><strong>Số điện thoại:</strong> {{ employee.phone_number|default:"Chưa cung cấp" }}</p>
+                                            <p class="mb-1"><strong>Ngày đăng ký:</strong> {{ employee.date_joined|date:"d/m/Y" }}</p>
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                            <form method="post" action="{% url 'reject_employee' employee.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-warning btn-sm">Hủy xác thực</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">Không có tài khoản nhân viên nào đã được xác thực.</div>
+                    {% endif %}
+                </div>
+
+                <!-- Rejected Employees -->
+                <div class="tab-pane fade" id="rejected">
+                    {% if rejected_employees %}
+                        <div class="row">
+                            {% for employee in rejected_employees %}
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="employee-card">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h5 class="m-0">{{ employee.full_name }}</h5>
+                                            <span class="status-badge status-rejected">Đã từ chối</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <p class="mb-1"><strong>Username:</strong> {{ employee.username }}</p>
+                                            <p class="mb-1"><strong>Email:</strong> {{ employee.email }}</p>
+                                            <p class="mb-1"><strong>Số điện thoại:</strong> {{ employee.phone_number|default:"Chưa cung cấp" }}</p>
+                                            <p class="mb-1"><strong>Ngày đăng ký:</strong> {{ employee.date_joined|date:"d/m/Y" }}</p>
+                                        </div>
+                                        <div class="d-flex justify-content-end">
+                                            <form method="post" action="{% url 'approve_employee' employee.id %}">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-success btn-sm">Chấp nhận</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">Không có tài khoản nhân viên nào đã bị từ chối.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Activate Bootstrap tabs
+        $('.nav-tabs a').on('click', function (e) {
+            e.preventDefault();
+            $(this).tab('show');
+        });
+    });
+</script>
+{% endblock %}

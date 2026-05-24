@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Hệ thống Quản lý Bãi Đỗ Xe{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-sidebar {
+        background-color: #2d3748;
+        min-height: 100vh;
+    }
+    .admin-sidebar .nav-link {
+        color: #cbd5e0;
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+    .admin-sidebar .nav-link:hover {
+        background-color: #4a5568;
+        color: white;
+    }
+    .admin-sidebar .nav-link.active {
+        background-color: #4299e1;
+        color: white;
+    }
+    .admin-sidebar .nav-link i {
+        margin-right: 0.5rem;
+    }
+    .admin-header {
+        background-color: #4299e1;
+        color: white;
+        padding: 1rem;
+    }
+    .form-container {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-0">
+            <div class="p-3 text-center">
+                <h4 class="text-white">Admin Panel</h4>
+            </div>
+            <div class="px-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'employee_management' %}"><i class="fas fa-users"></i> Quản lý nhân viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-user-friends"></i> Quản lý khách hàng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-car"></i> Quản lý phương tiện</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-parking"></i> Quản lý bãi đỗ / vị trí đỗ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-money-bill-wave"></i> Quản lý thu phí</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-chart-bar"></i> Báo cáo - Thống kê</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'system_settings' %}"><i class="fas fa-cog"></i> Cài đặt hệ thống</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="document.getElementById('logout-form').submit(); return false;">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 ml-sm-auto px-4">
+            <div class="admin-header d-flex justify-content-between align-items-center mb-4">
+                <h2 class="m-0">{{ title }}</h2>
+                <a href="{% url 'employee_management' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại
+                </a>
+            </div>
+
+            <div class="form-container">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                    <div class="text-danger small">{{ form.username.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.full_name.id_for_label }}" class="form-label">{{ form.full_name.label }}</label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                    <div class="text-danger small">{{ form.full_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">{{ form.phone_number.label }}</label>
+                                {{ form.phone_number }}
+                                {% if form.phone_number.errors %}
+                                    <div class="text-danger small">{{ form.phone_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+                                {{ form.password }}
+                                {% if form.password.help_text %}
+                                    <div class="text-muted small">{{ form.password.help_text }}</div>
+                                {% endif %}
+                                {% if form.password.errors %}
+                                    <div class="text-danger small">{{ form.password.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.confirm_password.id_for_label }}" class="form-label">{{ form.confirm_password.label }}</label>
+                                {{ form.confirm_password }}
+                                {% if form.confirm_password.help_text %}
+                                    <div class="text-muted small">{{ form.confirm_password.help_text }}</div>
+                                {% endif %}
+                                {% if form.confirm_password.errors %}
+                                    <div class="text-danger small">{{ form.confirm_password.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">{{ form.status.label }}</label>
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="text-danger small">{{ form.status.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'employee_management' %}" class="btn btn-secondary">Hủy</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if action == 'create' %}
+                                <i class="fas fa-plus"></i> Tạo tài khoản
+                            {% else %}
+                                <i class="fas fa-save"></i> Cập nhật
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Form validation
+        $('form').on('submit', function(e) {
+            let isValid = true;
+            
+            // Check required fields
+            $('input[required]').each(function() {
+                if (!$(this).val()) {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+            }
+        });
+    });
+</script>
+{% endblock %}

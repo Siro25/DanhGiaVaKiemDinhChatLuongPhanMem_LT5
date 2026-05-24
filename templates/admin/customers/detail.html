@@ -1,0 +1,52 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Chi tiết khách hàng{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-3">
+  <h3>Chi tiết khách hàng</h3>
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5>{{ customer.name }}</h5>
+      <p><strong>Số điện thoại:</strong> {{ customer.phone }}</p>
+      <p><strong>Địa chỉ:</strong> {{ customer.address|default:'-' }}</p>
+      <p><strong>Phân loại:</strong> {{ customer.customer_type }}</p>
+      <p><strong>Nhân viên phụ trách:</strong> {% if customer.assigned_to %}{{ customer.assigned_to.full_name|default:customer.assigned_to.username }}{% else %}-{% endif %}</p>
+      <p><strong>Ghi chú:</strong> {{ customer.note|default:'-' }}</p>
+    </div>
+  </div>
+
+  <h5>Danh sách phương tiện</h5>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Biển số</th>
+        <th>Loại</th>
+        <th>Gói dịch vụ</th>
+        <th>Vào</th>
+        <th>Ra</th>
+        <th>Trạng thái</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in vehicles %}
+      <tr>
+        <td>{{ v.plate_number }}</td>
+        <td>{{ v.get_vehicle_type_display }}</td>
+        <td>{{ v.get_service_package_display }}</td>
+        <td>{{ v.check_in|time:"H:i d/m/Y" }}</td>
+        <td>{{ v.check_out|default:'—' }}</td>
+        <td>{{ v.get_status_display }}</td>
+        <td>
+          <a class="btn btn-sm btn-outline-info" href="{% url 'vehicles:vehicle_detail' v.pk %}">Xem</a>
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'vehicles:vehicle_edit' v.pk %}">Sửa</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">Không có phương tiện</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block dashboard_content %}
+<div class="container mt-4">
+    <h2>{{ title }}</h2>
+    
+    <!-- Bảng giá tham khảo -->
+    <div class="card mb-3" id="pricing-info">
+        <div class="card-header bg-primary text-white">
+            <h6 class="mb-0"><i class="fas fa-info-circle"></i> Bảng giá tham khảo</h6>
+        </div>
+        <div class="card-body">
+            <div id="monthly-pricing" style="display: none;">
+                <h6 class="text-primary">Giá vé tháng:</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <span class="badge bg-primary"><i class="fas fa-car"></i> Ô tô: 800,000 VNĐ/tháng</span>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-warning"><i class="fas fa-motorcycle"></i> Xe máy: 100,000 VNĐ/tháng</span>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-success"><i class="fas fa-bicycle"></i> Xe đạp: 50,000 VNĐ/tháng</span>
+                    </div>
+                </div>
+            </div>
+            <div id="guest-pricing" style="display: none;">
+                <h6 class="text-info">Giá vé vãng lai:</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <span class="badge bg-primary"><i class="fas fa-car"></i> Ô tô: 10,000 VNĐ/lượt</span>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-warning"><i class="fas fa-motorcycle"></i> Xe máy: 5,000 VNĐ/lượt</span>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge bg-success"><i class="fas fa-bicycle"></i> Xe đạp: 3,000 VNĐ/lượt</span>
+                    </div>
+                </div>
+            </div>
+            <div id="default-pricing">
+                <p class="mb-0 text-muted">Vui lòng chọn loại khách để xem bảng giá</p>
+            </div>
+            <small class="text-muted">* Giá có thể thay đổi. Xem <a href="#" target="_blank">bảng giá chi tiết</a></small>
+        </div>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Tên khách hàng <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" value="{{ customer.name|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+            <input type="text" name="phone" class="form-control" value="{{ customer.phone|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" value="{{ customer.email|default_if_none:'' }}" placeholder="example@email.com">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Địa chỉ</label>
+            <input type="text" name="address" class="form-control" value="{{ customer.address|default_if_none:'' }}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Loại xe</label>
+            <select name="vehicle_type" class="form-control">
+                <option value="">-- Chọn loại xe --</option>
+                <option value="Xe máy" {% if customer.vehicle_type == "Xe máy" %}selected{% endif %}>Xe máy</option>
+                <option value="Ô tô" {% if customer.vehicle_type == "Ô tô" %}selected{% endif %}>Ô tô</option>
+                <option value="Xe đạp" {% if customer.vehicle_type == "Xe đạp" %}selected{% endif %}>Xe đạp</option>
+            </select>
+        </div>
+        <!-- Biển số xe đã liên kết với bản ghi Vehicle, không nhập tại đây -->
+        
+        {% if not customer_type_fixed %}
+        <div class="mb-3">
+            <label class="form-label">Phân loại khách <span class="text-danger">*</span></label>
+            <select name="customer_type" id="customer_type_select" class="form-control" required>
+                <option value="">-- Chọn loại khách --</option>
+                <option value="Khách vãng lai" {% if customer.customer_type == "Khách vãng lai" %}selected{% endif %}>Khách vãng lai</option>
+                <option value="Khách gửi tháng" {% if customer.customer_type == "Khách gửi tháng" %}selected{% endif %}>Khách gửi tháng</option>
+            </select>
+        </div>
+        {% else %}
+        <input type="hidden" name="customer_type" value="{{ customer.customer_type }}">
+        {% endif %}
+        
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> Lưu
+            </button>
+            <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+// Hiển thị bảng giá phù hợp khi chọn loại khách
+document.addEventListener('DOMContentLoaded', function() {
+    const customerTypeSelect = document.getElementById('customer_type_select');
+    const monthlyPricing = document.getElementById('monthly-pricing');
+    const guestPricing = document.getElementById('guest-pricing');
+    const defaultPricing = document.getElementById('default-pricing');
+    
+    if (customerTypeSelect) {
+        customerTypeSelect.addEventListener('change', function() {
+            const selectedType = this.value;
+            
+            // Ẩn tất cả
+            monthlyPricing.style.display = 'none';
+            guestPricing.style.display = 'none';
+            defaultPricing.style.display = 'none';
+            
+            // Hiển thị bảng giá phù hợp
+            if (selectedType === 'Khách gửi tháng') {
+                monthlyPricing.style.display = 'block';
+            } else if (selectedType === 'Khách vãng lai') {
+                guestPricing.style.display = 'block';
+            } else {
+                defaultPricing.style.display = 'block';
+            }
+        });
+        
+        // Trigger change event để hiển thị bảng giá ban đầu
+        customerTypeSelect.dispatchEvent(new Event('change'));
+    } else {
+        // Nếu không có dropdown (customer_type_fixed = True), hiển thị theo customer hiện tại
+        {% if customer.customer_type == 'Khách gửi tháng' %}
+            monthlyPricing.style.display = 'block';
+        {% elif customer.customer_type == 'Khách vãng lai' %}
+            guestPricing.style.display = 'block';
+        {% else %}
+            defaultPricing.style.display = 'block';
+        {% endif %}
+    }
+});
+</script>
+{% endblock %}

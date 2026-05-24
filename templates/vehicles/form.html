@@ -1,0 +1,117 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+{% load static %}
+
+{% block dashboard_content %}
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h3 class="card-title mb-4">{% if vehicle %}Sửa phương tiện{% else %}Thêm phương tiện{% endif %}</h3>
+
+      {% if not vehicle %}
+      <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong> Phương tiện sẽ tự động được đăng ký gói <strong>Vé tháng</strong> cho khách hàng gửi xe tháng.
+      </div>
+      
+      <!-- Bảng giá tham khảo -->
+      <div class="card mb-3">
+          <div class="card-header bg-primary text-white">
+              <h6 class="mb-0"><i class="fas fa-info-circle"></i> Bảng giá vé tháng</h6>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                  <div class="col-md-4">
+                      <span class="badge bg-primary"><i class="fas fa-car"></i> Ô tô: 800,000 VNĐ</span>
+                  </div>
+                  <div class="col-md-4">
+                      <span class="badge bg-warning"><i class="fas fa-motorcycle"></i> Xe máy: 100,000 VNĐ</span>
+                  </div>
+                  <div class="col-md-4">
+                      <span class="badge bg-success"><i class="fas fa-bicycle"></i> Xe đạp: 50,000 VNĐ</span>
+                  </div>
+              </div>
+              <small class="text-muted">* Xem <a href="{% url 'parking:pricing_list' %}" target="_blank">bảng giá chi tiết</a></small>
+          </div>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Biển số xe</label>
+            {{ form.plate_number }}
+            {% if form.plate_number.errors %}<div class="text-danger small mt-1">{{ form.plate_number.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Loại xe</label>
+            {{ form.vehicle_type }}
+            {% if form.vehicle_type.errors %}<div class="text-danger small mt-1">{{ form.vehicle_type.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Chủ phương tiện (Khách gửi tháng)</label>
+            {{ form.customer }}
+            {% if form.customer.errors %}<div class="text-danger small mt-1">{{ form.customer.errors.0 }}</div>{% endif %}
+          </div>
+          
+          <div class="col-md-6">
+            <label class="form-label">Bãi xe <span class="text-muted">(Tùy chọn)</span></label>
+            {{ form.parking_lot }}
+            {% if form.parking_lot.errors %}<div class="text-danger small mt-1">{{ form.parking_lot.errors.0 }}</div>{% endif %}
+            <small class="form-text text-muted d-block mt-1">
+              <i class="bi bi-info-circle"></i> Chọn bãi xe để quản lý vị trí đỗ
+            </small>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Màu xe</label>
+            {{ form.color }}
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Hình ảnh (optional)</label>
+            <div class="d-flex align-items-center gap-3">
+              {{ form.image }}
+              <div id="preview-wrap">
+                {% if vehicle and vehicle.image %}
+                  <img id="img-preview" src="{{ vehicle.image.url }}" style="max-height:120px;" class="img-thumbnail"/>
+                {% else %}
+                  <img id="img-preview" src="#" style="max-height:120px; display:none;" class="img-thumbnail"/>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button class="btn btn-primary me-2" type="submit">{% if vehicle %}Lưu thay đổi{% else %}Thêm phương tiện{% endif %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'vehicles:vehicle_list' %}">Hủy</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- image preview script -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const imgInput = document.querySelector('input[type="file"][name="{{ form.image.name }}"]');
+  const preview = document.getElementById('img-preview');
+  if (!imgInput) return;
+  imgInput.addEventListener('change', function(e){
+    const f = e.target.files[0];
+    if (!f) { preview.style.display = 'none'; return; }
+    const url = URL.createObjectURL(f);
+    preview.src = url;
+    preview.style.display = 'inline-block';
+  });
+});
+</script>
+{% endblock %}

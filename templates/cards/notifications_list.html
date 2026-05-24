@@ -1,0 +1,17 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+{% block dashboard_content %}
+<div class="container mt-3">
+  <h4>Thông báo</h4>
+  <ul class="list-group">
+    {% for n in notifications %}
+      <li class="list-group-item">
+        <strong>{{ n.title }}</strong> <br>
+        <small class="text-muted">{{ n.created_at }}</small>
+        <div>{{ n.message }}</div>
+      </li>
+    {% empty %}
+      <li class="list-group-item">Không có thông báo</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

@@ -1,0 +1,961 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block title %}Cài đặt Hệ thống - Admin Dashboard{% endblock %}
+
+{% block page_title %}Cài đặt Hệ thống{% endblock %}
+
+{% block admin_content %}
+{% csrf_token %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Settings Categories -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-cog"></i> Danh mục cài đặt
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        <a href="#pricing-settings" class="list-group-item list-group-item-action active" id="pricing-tab">
+                            <i class="fas fa-dollar-sign text-success me-2"></i>
+                            Bảng giá dịch vụ
+                        </a>
+                        <a href="#general-settings" class="list-group-item list-group-item-action" id="general-tab">
+                            <i class="fas fa-wrench text-primary me-2"></i>
+                            Cài đặt chung
+                        </a>
+                        <a href="#notification-settings" class="list-group-item list-group-item-action" id="notification-tab">
+                            <i class="fas fa-bell text-warning me-2"></i>
+                            Thông báo
+                        </a>
+                        <a href="#salary-management" class="list-group-item list-group-item-action" id="salary-tab">
+                            <i class="fas fa-money-bill-wave text-info me-2"></i>
+                            Quản lý lương
+                        </a>
+                        <a href="#system-maintenance" class="list-group-item list-group-item-action" id="maintenance-tab">
+                            <i class="fas fa-tools text-danger me-2"></i>
+                            Bảo trì hệ thống
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="col-md-9">
+            <!-- Pricing Settings Panel -->
+            <div id="pricing-settings" class="settings-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-dollar-sign text-success"></i>
+                            Cài đặt Bảng Giá Dịch Vụ
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Thông tin:</strong> Cấu hình giá vé cho các loại phương tiện và gói dịch vụ.
+                        </div>
+                        
+                        <!-- Embed pricing settings iframe or direct link -->
+                        <div class="text-center mb-3">
+                            <a href="{% url 'parking:admin_pricing_settings' %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-external-link-alt"></i>
+                                Mở Cài đặt Bảng Giá
+                            </a>
+                        </div>
+                        
+                        
+
+            <!-- General Settings Panel -->
+            <div id="general-settings" class="settings-panel" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-wrench text-primary"></i>
+                            Cài đặt Chung
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="system_name" class="form-label">Tên hệ thống</label>
+                                    <input type="text" class="form-control" id="system_name" value="Hệ thống Quản lý Bãi Đỗ Xe">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="system_timezone" class="form-label">Múi giờ</label>
+                                    <select class="form-select" id="system_timezone">
+                                        <option value="Asia/Ho_Chi_Minh" selected>UTC+7 (Việt Nam)</option>
+                                        <option value="UTC">UTC</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="currency" class="form-label">Đơn vị tiền tệ</label>
+                                    <input type="text" class="form-control" id="currency" value="VNĐ" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="max_parking_time" class="form-label">Thời gian gửi xe tối đa (giờ)</label>
+                                    <input type="number" class="form-control" id="max_parking_time" value="24">
+                                </div>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="auto_logout" checked>
+                                <label class="form-check-label" for="auto_logout">
+                                    Tự động đăng xuất sau 30 phút không hoạt động
+                                </label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="email_notifications" checked>
+                                <label class="form-check-label" for="email_notifications">
+                                    Gửi thông báo qua email
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Lưu cài đặt
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Settings Panel -->
+            <div id="notification-settings" class="settings-panel" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bell text-warning"></i>
+                            Cài đặt Thông báo
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            Tính năng này sẽ được phát triển trong phiên bản tiếp theo.
+                        </div>
+                        
+                        <form>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="sms_notifications">
+                                <label class="form-check-label" for="sms_notifications">
+                                    Thông báo SMS
+                                </label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="push_notifications" checked>
+                                <label class="form-check-label" for="push_notifications">
+                                    Thông báo đẩy (Push notifications)
+                                </label>
+                            </div>
+                            
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="payment_alerts" checked>
+                                <label class="form-check-label" for="payment_alerts">
+                                    Thông báo thanh toán
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-success" disabled>
+                                <i class="fas fa-save"></i> Lưu cài đặt
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Salary Management Panel -->
+            <div id="salary-management" class="settings-panel" style="display: none;">
+                <!-- Hidden CSRF Token for AJAX calls -->
+                {% csrf_token %}
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-money-bill-wave text-info"></i>
+                            Quản lý Lương Nhân viên
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Thông tin:</strong> Quản lý lương theo ca làm và thanh toán lương cho nhân viên.
+                        </div>
+                        
+                        <!-- Summary Statistics -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-users fa-2x text-primary mb-2"></i>
+                                        <h4 class="card-title text-primary" id="totalEmployees">{{ total_employees }}</h4>
+                                        <p class="card-text">Tổng số nhân viên</p>
+                                        <small class="text-muted">Số tài khoản có quyền nhân viên</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Employee Salary Overview -->
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <h6 class="mb-3">Thống kê Lương Nhân viên</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead class="table-primary">
+                                            <tr>
+                                                <th>Nhân viên</th>
+                                                <th>Lương/Ca</th>
+                                                <th>Số ca làm</th>
+                                                <th>Tổng lương</th>
+                                                <th>Trạng thái</th>
+                                                <th>Thao tác</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="salary-table-body">
+                                            <!-- Employee salary data from backend -->
+                                            {% for emp_data in salary_data %}
+                                            <tr data-employee-id="{{ emp_data.id }}">
+                                                <td>{{ emp_data.name }}</td>
+                                                <td>{{ emp_data.salary_per_shift|floatformat:0 }} VNĐ</td>
+                                                <td>{{ emp_data.shifts_completed }}</td>
+                                                <td>{{ emp_data.total_salary|floatformat:0 }} VNĐ</td>
+                                                <td class="{% if emp_data.status == 'Đã thanh toán' %}text-success{% else %}text-warning{% endif %}">{{ emp_data.status }}</td>
+                                                <td>
+                                                    {% if emp_data.status == 'Đã thanh toán' %}
+                                                    <span class="badge bg-success">Hoàn thành</span>
+                                                    {% else %}
+                                                    <button class="btn btn-success btn-sm" onclick="paySalaryQuick({{ emp_data.id }})">Thanh toán</button>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="6" class="text-center">Chưa có nhân viên nào</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Salary Settings -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card border-info">
+                                    <div class="card-header bg-info text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-edit"></i> Cài đặt Lương
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="salary-settings-form" onsubmit="event.preventDefault(); updateEmployeeSalary();">
+                                            <div class="mb-3">
+                                                <label for="employee_select" class="form-label">Chọn nhân viên</label>
+                                                <select class="form-select" id="employee_select" required>
+                                                    <option value="">-- Chọn nhân viên --</option>
+                                                    {% for emp in employees %}
+                                                    <option value="{{ emp.id }}">{{ emp.full_name|default:emp.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="salary_per_shift" class="form-label">Lương theo ca (VNĐ)</label>
+                                                <input type="number" class="form-control" id="salary_per_shift" 
+                                                       min="0" step="10000" placeholder="200000" required>
+                                            </div>
+                                            <button type="submit" class="btn btn-info">
+                                                <i class="fas fa-save"></i> Cập nhật Lương
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-hand-holding-usd"></i> Phát Lương
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="pay-salary-form" onsubmit="event.preventDefault(); paySalary();">
+                                            <div class="mb-3">
+                                                <label for="pay_employee_select" class="form-label">Chọn nhân viên</label>
+                                                <select class="form-select" id="pay_employee_select" required onchange="updateSalaryInfo()">
+                                                    <option value="">-- Chọn nhân viên --</option>
+                                                    {% for emp in employees %}
+                                                    <option value="{{ emp.id }}">{{ emp.full_name|default:emp.username }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="payment_amount" class="form-label">Số tiền phát lương (VNĐ)</label>
+                                                <input type="number" class="form-control" id="payment_amount" 
+                                                       min="0" step="10000" value="200000" placeholder="200000" required>
+                                                <small class="text-muted">Nhập số tiền muốn phát cho nhân viên</small>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Thông tin lương</label>
+                                                <div class="bg-light p-3 rounded">
+                                                    <div id="salary-info">Chọn nhân viên để xem thông tin</div>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-success btn-block">
+                                                <i class="fas fa-money-bill-wave"></i> Chuyển Lương
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payment History -->
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <h6 class="mb-3">Lịch sử Thanh toán Lương</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Ngày thanh toán</th>
+                                                <th>Nhân viên</th>
+                                                <th>Số ca</th>
+                                                <th>Số tiền</th>
+                                                <th>Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="payment-history-body">
+                                            <!-- Data will be loaded via AJAX -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Maintenance Panel -->
+            <div id="system-maintenance" class="settings-panel" style="display: none;">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tools text-danger"></i>
+                            Bảo trì Hệ thống
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Cảnh báo:</strong> Các thao tác bảo trì có thể ảnh hưởng đến hoạt động của hệ thống.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-primary">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-database fa-2x text-primary mb-2"></i>
+                                        <h6>Sao lưu dữ liệu</h6>
+                                        <p class="small text-muted">Tạo bản sao lưu cơ sở dữ liệu</p>
+                                        <button class="btn btn-primary btn-sm">
+                                            <i class="fas fa-download"></i> Sao lưu ngay
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-warning">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-broom fa-2x text-warning mb-2"></i>
+                                        <h6>Dọn dẹp dữ liệu</h6>
+                                        <p class="small text-muted">Xóa dữ liệu cũ và không cần thiết</p>
+                                        <button class="btn btn-warning btn-sm">
+                                            <i class="fas fa-trash-alt"></i> Dọn dẹp
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-info">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-chart-pie fa-2x text-info mb-2"></i>
+                                        <h6>Thống kê hệ thống</h6>
+                                        <p class="small text-muted">Xem thông tin về hiệu suất</p>
+                                        <button class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye"></i> Xem báo cáo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="card border-success">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-sync-alt fa-2x text-success mb-2"></i>
+                                        <h6>Cập nhật hệ thống</h6>
+                                        <p class="small text-muted">Kiểm tra và cài đặt bản cập nhật</p>
+                                        <button class="btn btn-success btn-sm">
+                                            <i class="fas fa-download"></i> Kiểm tra cập nhật
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CLEAN SALARY MANAGEMENT SCRIPT -->
+<script>
+console.log('Salary management system loading...');
+
+// Define functions in global scope
+function updateEmployeeSalary() {
+    console.log('updateEmployeeSalary called');
+    
+    const employeeId = document.getElementById('employee_select')?.value;
+    const salaryPerShift = document.getElementById('salary_per_shift')?.value;
+    
+    if (!employeeId || !salaryPerShift) {
+        // alert('Vui lòng điền đầy đủ thông tin!'); // Đã xóa alert
+        return false;
+    }
+    
+    if (salaryPerShift < 0) {
+        // alert('Lương phải là số dương!'); // Đã xóa alert
+        return false;
+    }
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfToken) {
+        // alert('Lỗi: Không tìm thấy CSRF token'); // Đã xóa alert
+        console.error('CSRF token not found');
+        return false;
+    }
+    
+    console.log('Updating salary for employee:', employeeId, 'to:', salaryPerShift);
+    
+    // Call API to update salary
+    fetch('/accounts/admin/salary-api/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken.value
+        },
+        body: JSON.stringify({
+            action: 'update_salary',
+            employee_id: parseInt(employeeId),
+            salary_per_shift: parseInt(salaryPerShift)
+        })
+    })
+    .then(response => {
+        console.log('API response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('API response data:', data);
+        if (data.success) {
+            // alert('Đã cập nhật lương thành công!'); // Đã xóa alert
+            
+            // Update the table row for this employee
+            updateTableRow(parseInt(employeeId), parseInt(salaryPerShift));
+            
+            // Reset form
+            document.getElementById('salary-settings-form')?.reset();
+        } else {
+            // alert('Lỗi: ' + (data.error || 'Không thể cập nhật lương')); // Đã xóa alert
+            console.error('Update salary error:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error updating salary:', error);
+        // alert('Lỗi kết nối API: ' + error.message); // Đã xóa alert
+    });
+    
+    return false; // Prevent form submission
+}
+
+function paySalary() {
+    console.log('paySalary called');
+    
+    const employeeId = document.getElementById('pay_employee_select')?.value;
+    const paymentAmount = document.getElementById('payment_amount')?.value;
+    
+    if (!employeeId) {
+        // alert('Vui lòng chọn nhân viên!'); // Đã xóa alert
+        return false;
+    }
+    
+    if (!paymentAmount || paymentAmount <= 0) {
+        // alert('Vui lòng nhập số tiền hợp lệ!'); // Đã xóa alert  
+        return false;
+    }
+    
+    if (!confirm(`Xác nhận phát ${parseInt(paymentAmount).toLocaleString()} VNĐ cho nhân viên này?`)) {
+        return false;
+    }
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfToken) {
+        // alert('Lỗi: Không tìm thấy CSRF token'); // Đã xóa alert
+        console.error('CSRF token not found');
+        return false;
+    }
+    
+    console.log('Processing payment for employee:', employeeId, 'Amount:', paymentAmount);
+    
+    // Call API to pay salary
+    fetch('/accounts/admin/salary-api/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken.value
+        },
+        body: JSON.stringify({
+            action: 'pay_salary',
+            employee_id: parseInt(employeeId),
+            payment_amount: parseFloat(paymentAmount)  // Gửi số tiền admin nhập
+        })
+    })
+    .then(response => {
+        console.log('Pay salary API response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Pay salary API response data:', data);
+        if (data.success) {
+            // alert('Đã thanh toán lương thành công!'); // Đã xóa alert
+            
+            // Update the table row status for this employee
+            updatePaymentStatus(parseInt(employeeId));
+            
+            // Reset form and info
+            document.getElementById('pay-salary-form')?.reset();
+            document.getElementById('salary-info').innerHTML = 'Chọn nhân viên để xem thông tin';
+            
+            // Refresh salary info dropdown to update data
+            updateSalaryInfo();
+        } else {
+            // alert('Lỗi: ' + (data.error || 'Không thể thanh toán lương')); // Đã xóa alert
+            console.error('Payment error:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error paying salary:', error);
+        // alert('Lỗi kết nối API: ' + error.message); // Đã xóa alert
+    });
+    
+    return false; // Prevent form submission
+}
+
+function updateSalaryInfo() {
+    console.log('updateSalaryInfo called');
+    const select = document.getElementById('pay_employee_select');
+    if (select && select.value) {
+        console.log('Selected employee:', select.value);
+        // Show employee info
+        const infoDiv = document.getElementById('selected_employee_info');
+        if (infoDiv) {
+            infoDiv.innerHTML = `
+                <div class="alert alert-info">
+                    <strong>Nhân viên đã chọn:</strong> ${select.options[select.selectedIndex].text}
+                </div>
+            `;
+        }
+    }
+}
+
+function paySalaryQuick(employeeId) {
+    console.log('paySalaryQuick called with employee ID:', employeeId);
+    
+    // Sử dụng số tiền mặc định 200,000 VNĐ cho quick pay
+    const defaultAmount = 200000;
+    
+    if (!confirm(`Xác nhận phát ${defaultAmount.toLocaleString()} VNĐ cho nhân viên này?`)) {
+        return;
+    }
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (!csrfToken) {
+        // alert('Lỗi: Không tìm thấy CSRF token'); // Đã xóa alert
+        console.error('CSRF token not found');
+        return;
+    }
+    
+    console.log('Processing quick payment for employee:', employeeId, 'Amount:', defaultAmount);
+    
+    // Call API to pay salary
+    fetch('/accounts/admin/salary-api/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken.value
+        },
+        body: JSON.stringify({
+            action: 'pay_salary',
+            employee_id: parseInt(employeeId),
+            payment_amount: defaultAmount  // Gửi số tiền mặc định
+        })
+    })
+    .then(response => {
+        console.log('Quick pay API response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Quick pay API response data:', data);
+        if (data.success) {
+            // alert('Đã thanh toán lương thành công!'); // Đã xóa alert
+            
+            // Update the table row status for this employee
+            updatePaymentStatus(parseInt(employeeId));
+        } else {
+            // alert('Lỗi: ' + (data.error || 'Không thể thanh toán lương')); // Đã xóa alert
+            console.error('Quick pay error:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error in quick pay:', error);
+        // alert('Lỗi kết nối API: ' + error.message); // Đã xóa alert
+    });
+}
+
+// Function to update table row after salary update
+function updateTableRow(employeeId, newSalaryPerShift) {
+    console.log('Updating table row for employee:', employeeId, 'new salary:', newSalaryPerShift);
+    
+    // Find the table row for this employee
+    const tableBody = document.getElementById('salary-table-body');
+    if (!tableBody) return;
+    
+    const rows = tableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        if (row.dataset.employeeId == employeeId) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 6) {
+                // Update salary per shift (column 1)
+                cells[1].textContent = newSalaryPerShift.toLocaleString() + ' VNĐ';
+                
+                // Get number of shifts (column 2)
+                const shiftsText = cells[2].textContent;
+                const shiftsCount = parseInt(shiftsText) || 0;
+                
+                // Calculate and update total salary (column 3)
+                const totalSalary = newSalaryPerShift * shiftsCount;
+                cells[3].textContent = totalSalary.toLocaleString() + ' VNĐ';
+                
+                console.log('Updated row - Shifts:', shiftsCount, 'Total:', totalSalary);
+                
+                // Add visual feedback
+                row.style.backgroundColor = '#d4edda';
+                setTimeout(() => {
+                    row.style.backgroundColor = '';
+                }, 2000);
+            }
+        }
+    });
+}
+
+// Function to update payment status after salary payment
+function updatePaymentStatus(employeeId) {
+    console.log('Updating payment status for employee:', employeeId);
+    
+    // Find the table row for this employee
+    const tableBody = document.getElementById('salary-table-body');
+    if (!tableBody) return;
+    
+    const rows = tableBody.querySelectorAll('tr');
+    rows.forEach(row => {
+        if (row.dataset.employeeId == employeeId) {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 6) {
+                // Get employee name and current total for history
+                const employeeName = cells[0].textContent;
+                const totalAmount = cells[3].textContent;
+                
+                // Update status (column 4) to "Đã thanh toán"
+                cells[4].innerHTML = '<span class="text-success">Đã thanh toán</span>';
+                
+                // Update action button (column 5) to show "Hoàn thành"
+                cells[5].innerHTML = '<span class="badge bg-success">Hoàn thành</span>';
+                
+                // Reset number of shifts to 0 (column 2) - đã thanh toán
+                cells[2].textContent = '0';
+                
+                // Reset total salary to 0 (column 3) - đã chuyển vào lương cơ bản
+                cells[3].textContent = '0 VNĐ';
+                
+                console.log('Payment status updated - money transferred to basic salary for employee:', employeeId);
+                
+                // Add to payment history with correct amount
+                addPaymentHistory(employeeName, totalAmount);
+                
+                // Add visual feedback
+                row.style.backgroundColor = '#d1ecf1';
+                setTimeout(() => {
+                    row.style.backgroundColor = '';
+                }, 3000);
+            }
+        }
+    });
+}
+
+// Function to add new payment to history table
+function addPaymentHistory(employeeName, amount) {
+    const historyBody = document.getElementById('payment-history-body');
+    if (!historyBody) return;
+    
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('vi-VN') + ' ' + now.toLocaleTimeString('vi-VN');
+    
+    // Create new row
+    const newRow = document.createElement('tr');
+    newRow.style.backgroundColor = '#fff3cd'; // Highlight new entry
+    newRow.innerHTML = `
+        <td>${dateStr}</td>
+        <td>${employeeName}</td>
+        <td>-</td>
+        <td>${amount}</td>
+        <td><span class="badge bg-success">Hoàn thành</span></td>
+    `;
+    
+    // Insert at the top of the table
+    historyBody.insertBefore(newRow, historyBody.firstChild);
+    
+    // Remove highlight after 3 seconds
+    setTimeout(() => {
+        newRow.style.backgroundColor = '';
+    }, 3000);
+    
+    console.log('Added payment history for:', employeeName, amount);
+}
+
+// Function to load payment history from API
+function loadPaymentHistory() {
+    console.log('Loading payment history...');
+    
+    fetch('/accounts/admin/salary-api/?action=get_payment_history')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Payment history data:', data);
+            populatePaymentHistory(data.payment_history || []);
+        })
+        .catch(error => {
+            console.error('Error loading payment history:', error);
+            const historyBody = document.getElementById('payment-history-body');
+            if (historyBody) {
+                historyBody.innerHTML = '<tr><td colspan="5" class="text-center">Lỗi tải dữ liệu lịch sử</td></tr>';
+            }
+        });
+}
+
+// Function to populate payment history table
+function populatePaymentHistory(historyData) {
+    const historyBody = document.getElementById('payment-history-body');
+    if (!historyBody) return;
+    
+    if (historyData.length === 0) {
+        historyBody.innerHTML = '<tr><td colspan="5" class="text-center">Chưa có lịch sử thanh toán</td></tr>';
+        return;
+    }
+    
+    historyBody.innerHTML = '';
+    historyData.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${item.date}</td>
+            <td>${item.employee_name}</td>
+            <td>${item.shifts_count}</td>
+            <td>${item.amount.toLocaleString()} VNĐ</td>
+            <td><span class="badge bg-success">${item.status}</span></td>
+        `;
+        historyBody.appendChild(row);
+    });
+    
+    console.log('Payment history populated with', historyData.length, 'items');
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing salary system');
+    // alert('DEBUG: JavaScript loaded! Check console for more info.'); // Đã xóa alert
+    
+    // Debug: Check if elements exist
+    console.log('=== CHECKING ELEMENTS ===');
+    const salaryTab = document.getElementById('salary-tab');
+    const salaryPanel = document.getElementById('salary-management');
+    console.log('Salary tab found:', !!salaryTab);
+    console.log('Salary panel found:', !!salaryPanel);
+    
+    if (salaryPanel) {
+        console.log('Panel current display:', salaryPanel.style.display);
+        console.log('Panel computed display:', getComputedStyle(salaryPanel).display);
+    }
+    
+    // Test function definitions
+    console.log('Testing function definitions:');
+    console.log('updateEmployeeSalary:', typeof updateEmployeeSalary);
+    console.log('paySalary:', typeof paySalary);
+    console.log('updateSalaryInfo:', typeof updateSalaryInfo);
+    console.log('paySalaryQuick:', typeof paySalaryQuick);
+    
+    // Tab switching logic
+    const tabLinks = document.querySelectorAll('.list-group-item[href]');
+    console.log('Found tabs:', tabLinks.length);
+    
+    tabLinks.forEach((tab, index) => {
+        console.log(`Tab ${index}:`, tab.getAttribute('href'), tab.id);
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            console.log('Clicked tab, target:', targetId);
+            
+            // Remove active from all tabs
+            tabLinks.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Hide all panels
+            const allPanels = document.querySelectorAll('.settings-panel');
+            allPanels.forEach(panel => {
+                panel.style.display = 'none';
+                panel.classList.remove('force-show');  // Remove force-show class
+                console.log('Hiding panel:', panel.id);
+            });
+            
+            // Show target panel
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) {
+                // Force show with multiple CSS properties
+                targetPanel.style.display = 'block';
+                targetPanel.style.visibility = 'visible';
+                targetPanel.style.opacity = '1';
+                targetPanel.style.height = 'auto';
+                targetPanel.style.minHeight = '500px';
+                targetPanel.style.overflow = 'visible';
+                targetPanel.classList.add('force-show');  // Add force-show class
+                
+                console.log('Showing panel:', targetId);
+                console.log('Panel now visible:', targetPanel.offsetHeight > 0);
+                
+                // Special debug for salary panel
+                if (targetId === 'salary-management') {
+                    console.log('=== SALARY PANEL ACTIVATED ===');
+                    setTimeout(() => {
+                        console.log('After timeout - panel height:', targetPanel.offsetHeight);
+                        console.log('Panel children count:', targetPanel.children.length);
+                        console.log('Panel computed display:', getComputedStyle(targetPanel).display);
+                        console.log('Panel computed visibility:', getComputedStyle(targetPanel).visibility);
+                        console.log('Panel computed opacity:', getComputedStyle(targetPanel).opacity);
+                        
+                        // Load payment history when salary tab is opened
+                        loadPaymentHistory();
+                    }, 100);
+                }
+            } else {
+                console.error('Target panel not found:', targetId);
+            }
+        });
+    });
+    
+    // Show first panel by default (pricing-settings)
+    const firstPanel = document.querySelector('.settings-panel');
+    if (firstPanel) {
+        // Hide all panels first
+        const allPanels = document.querySelectorAll('.settings-panel');
+        allPanels.forEach(panel => {
+            panel.style.display = 'none';
+            panel.classList.remove('force-show');
+        });
+        
+        // Show only the first panel
+        firstPanel.style.display = 'block';
+        firstPanel.classList.add('force-show');
+        console.log('Default panel shown:', firstPanel.id);
+    }
+    
+    // Add dropdown change handler
+    const paySelect = document.getElementById('pay_employee_select');
+    if (paySelect) {
+        paySelect.addEventListener('change', updateSalaryInfo);
+        console.log('Dropdown handler added');
+    }
+    
+    console.log('Salary system initialized successfully!');
+});
+</script>
+
+<!-- Force Show CSS -->
+<style>
+/* Hide all panels by default */
+.settings-panel {
+    display: none !important;
+}
+
+/* Show only the panel with force-show class */
+.settings-panel.force-show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 500px !important;
+    overflow: visible !important;
+}
+
+/* Ensure pricing-settings shows by default */
+#pricing-settings {
+    display: block !important;
+}
+
+/* Salary management specific styles */
+#salary-management.force-show {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 600px !important;
+    overflow: visible !important;
+    background: white !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+/* Ensure cards inside are visible */
+.settings-panel .card {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: white !important;
+}
+</style>
+{% endblock %}

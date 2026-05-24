@@ -1,0 +1,353 @@
+{% extends 'customers/customer_base.html' %}
+{% load static %}
+
+{% block title %}Lịch sử thanh toán{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2 class="mb-0">
+                <i class="bi bi-wallet2 me-2"></i>
+                Lịch sử thanh toán
+            </h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>
+                        Lịch sử giao dịch gần đây
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if wallet_transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Loại giao dịch</th>
+                                    <th class="text-end">Số tiền</th>
+                                    <th class="text-end">Số dư sau</th>
+                                    <th>Trạng thái</th>
+                                    <th>Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trans in wallet_transactions %}
+                                <tr>
+                                    <td>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar3 me-1"></i>
+                                            {{ trans.created_at|date:"d/m/Y H:i" }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% if trans.transaction_type == 'deposit' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-arrow-down-circle me-1"></i>Nạp tiền
+                                            </span>
+                                        {% elif trans.transaction_type == 'payment' %}
+                                            <span class="badge bg-primary">
+                                                <i class="bi bi-credit-card me-1"></i>Thanh toán
+                                            </span>
+                                        {% elif trans.transaction_type == 'refund' %}
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i>Hoàn tiền
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-arrow-up-circle me-1"></i>Rút tiền
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if trans.transaction_type == 'deposit' or trans.transaction_type == 'refund' %}
+                                            <span class="text-success fw-bold">+{{ trans.amount|floatformat:0 }}</span>
+                                        {% else %}
+                                            <span class="text-danger fw-bold">-{{ trans.amount|floatformat:0 }}</span>
+                                        {% endif %}
+                                        <small class="text-muted">VNĐ</small>
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-bold">{{ trans.balance_after|floatformat:0 }}</span>
+                                        <small class="text-muted">VNĐ</small>
+                                    </td>
+                                    <td>
+                                        {% if trans.status == 'completed' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle me-1"></i>Thành công
+                                            </span>
+                                        {% elif trans.status == 'pending' %}
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-hourglass-split me-1"></i>Đang xử lý
+                                            </span>
+                                        {% elif trans.status == 'failed' %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle me-1"></i>Thất bại
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                <i class="bi bi-dash-circle me-1"></i>Đã hủy
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ trans.description|default:"-" }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Hiển thị {{ wallet_transactions|length }} giao dịch gần nhất
+                            </small>
+                            <a href="{% url 'customers:wallet' %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>Xem tất cả
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox display-1 text-muted"></i>
+                        <p class="text-muted mt-3 mb-2">Chưa có giao dịch nào</p>
+                        <p class="text-muted small">Lịch sử nạp tiền và thanh toán sẽ hiển thị tại đây</p>
+                        <a href="{% url 'customers:wallet_deposit' %}" class="btn btn-primary mt-3">
+                            <i class="bi bi-plus-circle me-2"></i>Nạp tiền ngay
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông tin gói đăng ký hiện tại -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-card-checklist me-2"></i>
+                        Gói đăng ký của bạn
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if customer.customer_type == 'monthly' %}
+                        <!-- Khách gửi tháng -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="bi bi-calendar-check" style="font-size: 1.8rem;"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0">Gói tháng</h5>
+                                <p class="text-success mb-0 fw-bold">Từ {{ pricing.car_monthly|floatformat:0 }} VNĐ/tháng</p>
+                            </div>
+                        </div>
+                        
+                        {% if current_subscription %}
+                            <!-- Gói đang hoạt động -->
+                            <div class="alert alert-success">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <strong>Gói đang hoạt động</strong>
+                                </div>
+                                <hr>
+                                <p class="mb-1">
+                                    <i class="bi bi-calendar-event me-2"></i>
+                                    <strong>Bắt đầu:</strong> {{ current_subscription.start_date|date:"d/m/Y" }}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-calendar-x me-2"></i>
+                                    <strong>Hết hạn:</strong> {{ current_subscription.end_date|date:"d/m/Y" }}
+                                </p>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <a href="{% url 'customers:subscribe_monthly' %}" class="btn btn-success">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Gia hạn gói tháng
+                                </a>
+                            </div>
+                        {% else %}
+                            <!-- Gói hết hạn -->
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                Gói tháng của bạn đã hết hạn hoặc chưa kích hoạt
+                            </div>
+                            
+                            <div class="d-grid">
+                                <a href="{% url 'customers:subscribe_monthly' %}" class="btn btn-success">
+                                    <i class="bi bi-plus-circle me-2"></i>Đăng ký gói tháng
+                                </a>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="alert alert-info mb-0 mt-3">
+                            <i class="bi bi-gift"></i> <strong>Lợi ích:</strong>
+                            <ul class="mb-0 mt-2 ps-3">
+                                <li>Ra/vào bãi KHÔNG GIỚI HẠN</li>
+                                <li>MIỄN PHÍ gửi xe hoàn toàn</li>
+                                <li>Không tính phí theo giờ</li>
+                            </ul>
+                        </div>
+                        
+                    {% else %}
+                        <!-- Khách vãng lai -->
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                <i class="bi bi-person" style="font-size: 1.8rem;"></i>
+                            </div>
+                            <div class="ms-3">
+                                <h5 class="mb-0">Khách vãng lai</h5>
+                                <p class="text-primary mb-0 fw-bold">10,000 VNĐ/giờ</p>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>Bạn đang dùng gói Vãng lai</strong>
+                            <p class="mb-0 mt-2 small">
+                                Mỗi lần ra bãi sẽ tính phí theo thời gian. 
+                                Nâng cấp lên Gói tháng để tiết kiệm!
+                            </p>
+                        </div>
+                        
+                        <div class="card bg-light mb-3">
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-2 text-muted">Ước tính chi phí</h6>
+                                <ul class="mb-0 small">
+                                    <li>1 giờ = 10,000 VNĐ</li>
+                                    <li>5 giờ/ngày x 30 ngày = <strong class="text-danger">1,500,000 VNĐ</strong></li>
+                                    <li>Gói tháng chỉ = <strong class="text-success">500,000 VNĐ</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <a href="{% url 'customers:subscribe_monthly' %}" class="btn btn-success w-100">
+                            <i class="bi bi-arrow-up-circle me-2"></i>Nâng cấp lên Gói tháng
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-tags me-2"></i>
+                        Bảng giá dịch vụ
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-car-front"></i> Ô tô
+                    </h6>
+                    <div class="list-group mb-4">
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-calendar-month text-success"></i> 
+                                    <strong>Vé tháng</strong>
+                                    <br>
+                                    <small class="text-muted">Gửi xe không giới hạn</small>
+                                </div>
+                                <h5 class="text-success mb-0">{{ pricing.car_monthly|floatformat:0 }} VNĐ</h5>
+                            </div>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-clock text-primary"></i> 
+                                    <strong>Vé lượt</strong>
+                                    <br>
+                                    <small class="text-muted">Tính theo giờ</small>
+                                </div>
+                                <h5 class="text-primary mb-0">{{ pricing.car_hourly|floatformat:0 }} VNĐ/giờ</h5>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="text-muted mb-3">
+                        <i class="bi bi-scooter"></i> Xe máy
+                    </h6>
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-calendar-month text-success"></i> 
+                                    <strong>Vé tháng</strong>
+                                </div>
+                                <h5 class="text-success mb-0">{{ pricing.motorcycle_monthly|floatformat:0 }} VNĐ</h5>
+                            </div>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-clock text-primary"></i> 
+                                    <strong>Vé lượt</strong>
+                                </div>
+                                <h5 class="text-primary mb-0">{{ pricing.motorcycle_hourly|floatformat:0 }} VNĐ/giờ</h5>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <small>
+                            <i class="bi bi-lightbulb"></i> 
+                            <strong>Lưu ý:</strong> Vé tháng áp dụng cho 1 xe, gửi không giới hạn số lần!
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phương thức thanh toán -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-credit-card-2-front me-2"></i>
+                        Phương thức thanh toán
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item">
+                            <i class="bi bi-wallet2 me-2 text-success"></i>
+                            Tiền mặt
+                        </div>
+                        <div class="list-group-item">
+                            <i class="bi bi-phone me-2 text-danger"></i>
+                            Momo (Đang phát triển)
+                        </div>
+                        <div class="list-group-item">
+                            <i class="bi bi-qr-code me-2 text-primary"></i>
+                            Chuyển khoản ngân hàng (Đang phát triển)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút quay về -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <a href="{% url 'customers:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Trở về Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

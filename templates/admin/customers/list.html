@@ -1,0 +1,72 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Quản lý khách hàng{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-3">
+  <h3>Quản lý khách hàng</h3>
+
+  <!-- search + filters -->
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Tìm kiếm (tên, số điện thoại, biển số...)">
+    </div>
+    <div class="col-md-3">
+      <select name="customer_type" class="form-select">
+        <option value="">-- Tất cả phân loại --</option>
+  <option value="Khách vãng lai" {% if customer_type == "Khách vãng lai" %}selected{% endif %}>Khách vãng lai</option>
+  <option value="Khách gửi tháng" {% if customer_type == "Khách gửi tháng" %}selected{% endif %}>Khách gửi tháng</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <select name="assigned" class="form-select">
+        <option value="">-- Nhân viên phụ trách --</option>
+        {% for s in staff_qs %}
+          <option value="{{ s.pk }}" {% if assigned|default:'' == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.full_name|default:s.username }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-primary">Lọc</button>
+    </div>
+  </form>
+
+  <a class="btn btn-success mb-3" href="{% url 'customers:customer_add' %}">Thêm mới khách hàng</a>
+
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Tên khách hàng</th>
+        <th>Số điện thoại</th>
+        <th>Địa chỉ</th>
+        <th>Phân loại</th>
+        <th>Nhân viên phụ trách</th>
+        <th>Số lượng phương tiện</th>
+        <th>Hành động</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in customers %}
+      <tr>
+        <td>{{ c.name }}</td>
+        <td>{{ c.phone }}</td>
+        <td>{{ c.address|default:'-' }}</td>
+        <td>{{ c.customer_type }}</td>
+        <td>{% if c.assigned_to %}{{ c.assigned_to.full_name|default:c.assigned_to.username }}{% else %}-{% endif %}</td>
+        <td>{{ c.vehicle_count|default:0 }}</td>
+        <td>
+          <a class="btn btn-sm btn-outline-info" href="{% url 'customers:customer_detail' c.pk %}">Xem</a>
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'customers:customer_edit' c.pk %}">Sửa</a>
+          <form method="post" action="{% url 'customers:customer_delete' c.pk %}" style="display:inline;" onsubmit="return confirm('Xác nhận xóa khách hàng? (xóa mềm)');">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger">Xóa</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7">Chưa có khách hàng</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

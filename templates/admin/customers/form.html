@@ -1,0 +1,46 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}{% if customer %}Sửa khách hàng{% else %}Thêm khách hàng{% endif %}{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-4">
+    <h2>{{ title }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-2">
+            <label>Tên khách hàng</label>
+            <input type="text" name="name" class="form-control" value="{{ customer.name|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-2">
+            <label>Số Điện thoại</label>
+            <input type="text" name="phone" class="form-control" value="{{ customer.phone|default_if_none:'' }}" required>
+        </div>
+        <div class="mb-2">
+            <label>Địa chỉ</label>
+            <input type="text" name="address" class="form-control" value="{{ customer.address|default_if_none:'' }}">
+        </div>
+        <div class="mb-2">
+            <label>Phân Loại Khách</label>
+            <select name="customer_type" class="form-control" required>
+                <option value="Khách vãng lai" {% if customer.customer_type == "Khách vãng lai" %}selected{% endif %}>Khách vãng lai</option>
+                <option value="Khách gửi tháng" {% if customer.customer_type == "Khách gửi tháng" %}selected{% endif %}>Khách gửi tháng</option>
+            </select>
+        </div>
+        <div class="mb-2">
+            <label>Nhân viên phụ trách</label>
+            <select name="assigned_to" class="form-control">
+                <option value="">-- Chọn nhân viên --</option>
+                {% for s in staff_qs %}
+                <option value="{{ s.pk }}" {% if customer.assigned_to and customer.assigned_to.pk == s.pk %}selected{% endif %}>{{ s.full_name|default:s.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-2">
+            <label>Ghi chú</label>
+            <textarea name="note" class="form-control">{{ customer.note|default_if_none:'' }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Lưu</button>
+        <a href="{% url 'admin_customer_management' %}" class="btn btn-secondary">Quay lại</a>
+    </form>
+</div>
+{% endblock %}

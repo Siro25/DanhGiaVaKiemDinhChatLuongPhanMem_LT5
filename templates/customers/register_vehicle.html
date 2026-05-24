@@ -1,0 +1,108 @@
+{% extends 'customers/customer_base.html' %}
+{% block title %}{% if vehicle %}Chỉnh sửa phương tiện{% else %}Đăng ký phương tiện{% endif %}{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm" style="max-width:720px;margin:0 auto;">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">
+        <i class="bi bi-{% if vehicle %}pencil-square{% else %}plus-circle{% endif %}"></i>
+        {% if vehicle %}Chỉnh sửa phương tiện{% else %}Đăng ký phương tiện mới{% endif %}
+      </h4>
+    </div>
+    
+    <div class="card-body p-4">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+      
+      <form method="post">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-card-text"></i> Biển số xe <span class="text-danger">*</span>
+          </label>
+          <input type="text" 
+                 name="plate_number" 
+                 class="form-control {% if form.plate_number.errors %}is-invalid{% endif %}"
+                 value="{{ form.plate_number.value|default:'' }}"
+                 placeholder="VD: 29A-12345"
+                 required>
+          {% if form.plate_number.errors %}
+            <div class="invalid-feedback">
+              {{ form.plate_number.errors }}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Nhập biển số xe theo định dạng Việt Nam</small>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-bold">
+            <i class="bi bi-truck"></i> Loại phương tiện <span class="text-danger">*</span>
+          </label>
+          <select name="vehicle_type" 
+                  class="form-select {% if form.vehicle_type.errors %}is-invalid{% endif %}"
+                  required>
+            <option value="">-- Chọn loại xe --</option>
+            <option value="bicycle" {% if form.vehicle_type.value == 'bicycle' %}selected{% endif %}>Xe đạp</option>
+            <option value="motorcycle" {% if form.vehicle_type.value == 'motorcycle' %}selected{% endif %}>Xe máy</option>
+            <option value="car" {% if form.vehicle_type.value == 'car' %}selected{% endif %}>Ô tô</option>
+            <option value="truck" {% if form.vehicle_type.value == 'truck' %}selected{% endif %}>Xe tải</option>
+          </select>
+          {% if form.vehicle_type.errors %}
+            <div class="invalid-feedback">
+              {{ form.vehicle_type.errors }}
+            </div>
+          {% endif %}
+        </div>
+        
+        <div class="mb-4">
+          <label class="form-label fw-bold">
+            <i class="bi bi-palette"></i> Màu xe
+          </label>
+          <input type="text" 
+                 name="color" 
+                 class="form-control {% if form.color.errors %}is-invalid{% endif %}"
+                 value="{{ form.color.value|default:'' }}"
+                 placeholder="VD: Đỏ, Xanh, Trắng...">
+          {% if form.color.errors %}
+            <div class="invalid-feedback">
+              {{ form.color.errors }}
+            </div>
+          {% endif %}
+          <small class="form-text text-muted">Tùy chọn - giúp nhận diện xe dễ dàng hơn</small>
+        </div>
+        
+        {% if not vehicle %}
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i> 
+          <strong>Lưu ý:</strong> Sau khi đăng ký, xe của bạn sẽ được chuyển đến nhân viên để duyệt. 
+          Bạn sẽ nhận được thông báo khi xe được duyệt.
+        </div>
+        {% endif %}
+        
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+          <button type="button" class="btn btn-outline-secondary" onclick="history.back();">
+            <i class="bi bi-x-circle"></i> Hủy
+          </button>
+          <button class="btn btn-primary" type="submit">
+            <i class="bi bi-{% if vehicle %}save{% else %}check-circle{% endif %}"></i>
+            {% if vehicle %}Lưu thay đổi{% else %}Đăng ký{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Admin - Hệ thống Quản lý Bãi Đỗ Xe{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-sidebar {
+        background-color: #2d3748;
+        min-height: 100vh;
+    }
+    .admin-sidebar .nav-link {
+        color: #cbd5e0;
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+    .admin-sidebar .nav-link:hover {
+        background-color: #4a5568;
+        color: white;
+    }
+    .admin-sidebar .nav-link.active {
+        background-color: #4299e1;
+        color: white;
+    }
+    .admin-sidebar .nav-link i {
+        margin-right: 0.5rem;
+    }
+    .admin-header {
+        background-color: #4299e1;
+        color: white;
+        padding: 1rem;
+    }
+    .admin-content {
+        padding: 1.5rem;
+    }
+    .stat-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+    }
+    .stat-card h3 {
+        color: #4a5568;
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    .stat-card .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    .stat-card .stat-icon {
+        font-size: 2.5rem;
+        color: #4299e1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3 col-lg-2 admin-sidebar p-0">
+            <div class="p-3 text-center">
+                <h4 class="text-white">Admin Panel</h4>
+            </div>
+            <div class="px-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'employee_management' %}active{% endif %}" href="{% url 'employee_management' %}"><i class="fas fa-users"></i> Quản lý nhân viên</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.namespace == 'parking' and 'pricing' not in request.resolver_match.url_name %}active{% endif %}" href="{% url 'parking:dashboard' %}"><i class="fas fa-parking"></i> Quản lý bãi đỗ / vị trí đỗ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_customer_management' %}active{% endif %}" href="{% url 'admin_customer_management' %}"><i class="fas fa-user-friends"></i> Quản lý khách hàng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.namespace == 'vehicles' %}active{% endif %}" href="{% url 'vehicles:vehicle_list' %}"><i class="fas fa-car"></i> Quản lý phương tiện</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_payment_management' %}active{% endif %}" href="{% url 'admin_payment_management' %}"><i class="fas fa-money-bill-wave"></i> Quản lý thu phí</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'reports_dashboard' %}active{% endif %}" href="{% url 'reports_dashboard' %}"><i class="fas fa-chart-bar"></i> Báo cáo - Thống kê</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'system_settings' %}active{% endif %}" href="{% url 'system_settings' %}"><i class="fas fa-cog"></i> Cài đặt hệ thống</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" onclick="document.getElementById('logout-form').submit(); return false;">
+                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                        </a>
+                        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+                            {% csrf_token %}
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10 p-0">
+            <div class="admin-header d-flex justify-content-between align-items-center">
+                <h2 class="m-0">{% block page_title %}Dashboard{% endblock %}</h2>
+                <div>
+                    <span>Xin chào, {{ request.user.full_name }}</span>
+                </div>
+            </div>
+            
+            <div class="admin-content">
+                {% block admin_content %}
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3>Tổng số nhân viên</h3>
+                                    <div class="stat-value">{{ total_employees }}</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3>Tổng số khách hàng</h3>
+                                    <div class="stat-value">{{ total_customers }}</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-user-friends"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3>Phương tiện đang gửi</h3>
+                                    <div class="stat-value">{{ vehicles_parked }}</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-car"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thống kê Bãi đỗ xe -->
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <h4 class="mb-3"><i class="fas fa-parking"></i> Thống kê Bãi đỗ xe</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="border-left: 4px solid #17a2b8;">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3>Tổng bãi đỗ</h3>
+                                    <div class="stat-value text-info">{{ total_parking_lots }}</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-building text-info"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="border-left: 4px solid #28a745;">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3>Vị trí trống</h3>
+                                    <div class="stat-value text-success">{{ available_slots }}</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="border-left: 4px solid #ffc107;">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3>Vị trí có xe</h3>
+                                    <div class="stat-value text-warning">{{ occupied_slots }}</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-car text-warning"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="border-left: 4px solid #6610f2;">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h3>Tổng vị trí</h3>
+                                    <div class="stat-value text-primary">{{ total_parking_slots }}</div>
+                                </div>
+                                <div class="stat-icon">
+                                    <i class="fas fa-th text-primary"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">Thống kê doanh thu theo tháng</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="revenue-chart" style="height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title">Thống kê lượng xe theo ngày</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="vehicle-chart" style="height: 300px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ApexCharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.44.0/dist/apexcharts.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Revenue Chart - Doanh thu theo tháng
+    var revenueChartOptions = {
+        series: [{
+            name: 'Doanh thu (VNĐ)',
+            data: [{% for stat in monthly_revenue_stats %}{{ stat.revenue|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]
+        }],
+        chart: {
+            type: 'area',
+            height: 300,
+            toolbar: {
+                show: false,
+            },
+            background: '#ffffff',
+        },
+        colors: ['#4299e1'],
+        dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+                if (val >= 1000000) {
+                    return (val / 1000000).toFixed(1) + 'M';
+                } else if (val >= 1000) {
+                    return (val / 1000).toFixed(0) + 'K';
+                } else {
+                    return val.toFixed(0);
+                }
+            },
+        },
+        fill: {
+            type: 'gradient',
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.7,
+                opacityTo: 0.3,
+                stops: [0, 90, 100]
+            },
+        },
+        grid: {
+            borderColor: '#e2e8f0',
+            strokeDashArray: 3,
+        },
+        legend: {
+            show: true,
+            position: 'top',
+        },
+        markers: {
+            size: 4,
+            colors: ['#4299e1'],
+            strokeColors: '#fff',
+            strokeWidth: 2,
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 2,
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return new Intl.NumberFormat('vi-VN').format(val) + ' VNĐ';
+                }
+            }
+        },
+        xaxis: {
+            categories: [{% for stat in monthly_revenue_stats %}'{{ stat.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '12px'
+                }
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Doanh thu (VNĐ)',
+                style: {
+                    color: '#64748b'
+                }
+            },
+            labels: {
+                style: {
+                    colors: '#64748b'
+                },
+                formatter: function (val) {
+                    if (val >= 1000000) {
+                        return (val / 1000000).toFixed(1) + 'M';
+                    } else if (val >= 1000) {
+                        return (val / 1000).toFixed(0) + 'K';
+                    } else {
+                        return val.toFixed(0);
+                    }
+                }
+            },
+        }
+    };
+
+    console.log('Revenue chart data:', [{% for stat in monthly_revenue_stats %}{{ stat.revenue|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]);
+    console.log('Revenue chart categories:', [{% for stat in monthly_revenue_stats %}'{{ stat.month }}'{% if not forloop.last %},{% endif %}{% endfor %}]);
+
+    // Only render chart if element exists
+    var revenueChartElement = document.querySelector("#revenue-chart");
+    if (revenueChartElement) {
+        var revenueChart = new ApexCharts(revenueChartElement, revenueChartOptions);
+        revenueChart.render();
+    } else {
+        console.log('Revenue chart element not found, skipping chart render');
+    }
+
+    // Vehicle Chart - Lượng xe theo ngày
+    var vehicleChartOptions = {
+        series: [{
+            name: 'Số lượt xe',
+            data: [{% for stat in daily_vehicle_stats %}{{ stat.count }}{% if not forloop.last %},{% endif %}{% endfor %}]
+        }],
+        chart: {
+            type: 'bar',
+            height: 300,
+            toolbar: {
+                show: false,
+            },
+            background: '#ffffff',
+        },
+        colors: ['#48bb78'],
+        plotOptions: {
+            bar: {
+                borderRadius: 8,
+                dataLabels: {
+                    position: 'top',
+                },
+                columnWidth: '60%',
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            offsetY: -20,
+            style: {
+                fontSize: '12px',
+                colors: ["#304758"]
+            }
+        },
+        grid: {
+            borderColor: '#e2e8f0',
+            strokeDashArray: 3,
+        },
+        xaxis: {
+            categories: [{% for stat in daily_vehicle_stats %}'{{ stat.date }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            labels: {
+                style: {
+                    colors: '#64748b',
+                    fontSize: '11px'
+                },
+                rotate: -45,
+            },
+            axisBorder: {
+                show: true,
+                color: '#e2e8f0'
+            },
+            axisTicks: {
+                show: true,
+                color: '#e2e8f0'
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Số lượt xe',
+                style: {
+                    color: '#64748b',
+                    fontSize: '12px'
+                }
+            },
+            labels: {
+                style: {
+                    colors: '#64748b'
+                },
+                formatter: function (val) {
+                    return Math.floor(val);
+                }
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function (val) {
+                    return val + ' lượt xe';
+                }
+            }
+        }
+    };
+
+    console.log('Vehicle chart data:', [{% for stat in daily_vehicle_stats %}{{ stat.count }}{% if not forloop.last %},{% endif %}{% endfor %}]);
+    console.log('Vehicle chart categories:', [{% for stat in daily_vehicle_stats %}'{{ stat.date }}'{% if not forloop.last %},{% endif %}{% endfor %}]);
+
+    var vehicleChartElement = document.querySelector("#vehicle-chart");
+    if (vehicleChartElement) {
+        var vehicleChart = new ApexCharts(vehicleChartElement, vehicleChartOptions);
+        vehicleChart.render();
+    } else {
+        console.log('Vehicle chart element not found, skipping chart render');
+    }
+
+    // Debug thông tin
+    console.log('Today revenue raw:', {{ today_revenue_raw|default:0 }});
+    console.log('Today revenue display:', '{{ today_revenue }}');
+});
+
+{% block extra_dashboard_script %}
+{% endblock %}
+</script>
+
+{% endblock %}

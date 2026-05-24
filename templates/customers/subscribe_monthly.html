@@ -1,0 +1,327 @@
+{% extends 'customers/customer_base.html' %}
+{% load static %}
+
+{% block title %}Đăng ký gói tháng{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-calendar-check me-2"></i>
+                        {% if current_subscription %}Gia hạn gói tháng{% else %}Đăng ký gói tháng{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if current_subscription %}
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">Gói hiện tại</h5>
+                        <p class="mb-1"><strong>Bắt đầu:</strong> {{ current_subscription.start_date|date:"d/m/Y" }}</p>
+                        <p class="mb-0"><strong>Hết hạn:</strong> {{ current_subscription.end_date|date:"d/m/Y" }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Hiển thị số dư ví -->
+                    <div class="alert alert-success">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-wallet2 me-2"></i><strong>Số dư ví của bạn:</strong></span>
+                            <h5 class="mb-0 fw-bold text-success">{{ wallet.balance|floatformat:0 }} VNĐ</h5>
+                        </div>
+                        <small class="text-muted">
+                            {% if wallet.balance < pricing.car_monthly %}
+                            <a href="{% url 'customers:wallet_deposit' %}" class="text-decoration-none">
+                                <i class="bi bi-exclamation-triangle me-1"></i>Cần nạp thêm để mua gói tháng
+                            </a>
+                            {% else %}
+                            <i class="bi bi-check-circle me-1"></i>Đủ để mua gói tháng
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <form method="post" id="subscriptionForm">
+                        {% csrf_token %}
+                        
+                        <!-- Chọn xe -->
+                        {% if customer_vehicles %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-car-front me-2"></i>Chọn xe cần đăng ký gói
+                            </label>
+                            <select name="vehicle_id" class="form-select form-select-lg" id="vehicleSelect" onchange="updateVehicleType()" required>
+                                <option value="">-- Chọn xe --</option>
+                                {% for vehicle in customer_vehicles %}
+                                <option value="{{ vehicle.id }}" 
+                                        data-type="{{ vehicle.vehicle_type }}"
+                                        data-plate="{{ vehicle.plate_number }}"
+                                        data-color="{{ vehicle.color }}">
+                                    {{ vehicle.plate_number }} - {{ vehicle.get_vehicle_type_display }}
+                                    {% if vehicle.color %}({{ vehicle.color }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">Chọn xe bạn muốn đăng ký gói tháng</small>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <h5 class="alert-heading">
+                                <i class="bi bi-exclamation-triangle me-2"></i>Chưa có xe nào
+                            </h5>
+                            <p class="mb-0">
+                                Bạn cần đăng ký xe trước khi đăng ký gói tháng.
+                                <a href="{% url 'customers:register_vehicle' %}" class="alert-link">
+                                    Đăng ký xe ngay
+                                </a>
+                            </p>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Hidden input cho vehicle_type -->
+                        <input type="hidden" name="vehicle_type" id="vehicleType" value="car">
+                        
+                        <!-- Hiển thị thông tin xe đã chọn -->
+                        <div id="vehicleInfoDisplay" class="mb-4" style="display: none;">
+                            <div class="card border-info">
+                                <div class="card-body">
+                                    <h6 class="card-title text-info">
+                                        <i class="bi bi-info-circle me-2"></i>Thông tin xe được chọn
+                                    </h6>
+                                    <div id="display-car" class="vehicle-display-card" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-car-front-fill fs-2 text-primary me-3"></i>
+                                            <div>
+                                                <h5 class="mb-0">Ô tô</h5>
+                                                <p class="mb-0 vehicle-plate text-muted"></p>
+                                                <p class="text-success fw-bold mb-0">{{ pricing.car_monthly|floatformat:0 }} VNĐ/tháng</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="display-motorcycle" class="vehicle-display-card" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-bicycle fs-2 text-secondary me-3"></i>
+                                            <div>
+                                                <h5 class="mb-0">Xe máy</h5>
+                                                <p class="mb-0 vehicle-plate text-muted"></p>
+                                                <p class="text-success fw-bold mb-0">{{ pricing.motorcycle_monthly|floatformat:0 }} VNĐ/tháng</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="display-bicycle" class="vehicle-display-card" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-bicycle fs-2 text-info me-3"></i>
+                                            <div>
+                                                <h5 class="mb-0">Xe đạp</h5>
+                                                <p class="mb-0 vehicle-plate text-muted"></p>
+                                                <p class="text-success fw-bold mb-0">{{ pricing.bicycle_monthly|floatformat:0 }} VNĐ/tháng</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chọn loại xe (hiển thị thông tin) -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Chọn loại xe</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card border-primary vehicle-option" onclick="selectVehicle('car')">
+                                        <div class="card-body text-center">
+                                            <input type="radio" name="vehicle_type" value="car" id="car" checked>
+                                            <label for="car" class="form-check-label w-100" style="cursor: pointer;">
+                                                <i class="bi bi-car-front-fill fs-1 text-primary"></i>
+                                                <h5 class="mt-2">Ô tô</h5>
+                                                <p class="text-success fw-bold mb-0">{{ pricing.car_monthly|floatformat:0 }} VNĐ/tháng</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-secondary vehicle-option" onclick="selectVehicle('motorcycle')">
+                                        <div class="card-body text-center">
+                                            <input type="radio" name="vehicle_type" value="motorcycle" id="motorcycle">
+                                            <label for="motorcycle" class="form-check-label w-100" style="cursor: pointer;">
+                                                <i class="bi bi-bicycle fs-1 text-secondary"></i>
+                                                <h5 class="mt-2">Xe máy</h5>
+                                                <p class="text-success fw-bold mb-0">{{ pricing.motorcycle_monthly|floatformat:0 }} VNĐ/tháng</p>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chọn thời hạn -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Chọn thời hạn</label>
+                            <select name="duration" class="form-select form-select-lg" id="duration" onchange="updateTotal()">
+                                <option value="1">1 tháng</option>
+                                <option value="3">3 tháng (Tiết kiệm hơn!)</option>
+                                <option value="6">6 tháng (Ưu đãi đặc biệt!)</option>
+                                <option value="12">12 tháng (Giá tốt nhất!)</option>
+                            </select>
+                        </div>
+
+                        <!-- Tổng tiền -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Tổng thanh toán:</h5>
+                                    <h3 class="mb-0 text-success" id="totalAmount">{{ pricing.car_monthly|floatformat:0 }} VNĐ</h3>
+                                </div>
+                                <small class="text-muted" id="priceDetail">1 tháng x {{ pricing.car_monthly|floatformat:0 }} VNĐ</small>
+                                <hr>
+                                <div class="d-flex justify-content-between">
+                                    <span>Số dư ví:</span>
+                                    <strong class="text-primary">{{ wallet.balance|floatformat:0 }} VNĐ</strong>
+                                </div>
+                                <div class="d-flex justify-content-between" id="remainingBalance">
+                                    <span>Còn lại sau thanh toán:</span>
+                                    <strong class="text-success" id="afterBalance">{{ wallet.balance|add:"-"|add:pricing.car_monthly|floatformat:0 }} VNĐ</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Phương thức thanh toán -->
+                        <input type="hidden" name="payment_method" value="wallet">
+                        
+                        <!-- Lợi ích -->
+                        <div class="alert alert-success">
+                            <h6 class="alert-heading"><i class="bi bi-star-fill me-2"></i>Lợi ích gói tháng:</h6>
+                            <ul class="mb-0">
+                                <li>Ra/vào <strong>KHÔNG GIỚI HẠN</strong> số lần</li>
+                                <li><strong>MIỄN PHÍ</strong> gửi xe hoàn toàn</li>
+                                <li>Không tính phí theo giờ</li>
+                                <li>Áp dụng cho <strong>1 xe</strong></li>
+                            </ul>
+                        </div>
+
+                        <!-- Nút submit -->
+                        {% if customer_vehicles %}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>
+                                {% if current_subscription %}Xác nhận gia hạn{% else %}Đăng ký ngay{% endif %}
+                            </button>
+                            <a href="{% url 'customers:payment_history' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Quay lại
+                            </a>
+                        </div>
+                        {% else %}
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'customers:register_vehicle' %}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>Đăng ký xe ngay
+                            </a>
+                            <a href="{% url 'customers:dashboard' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Quay lại Dashboard
+                            </a>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const pricing = {
+    car: {{ pricing.car_monthly }},
+    motorcycle: {{ pricing.motorcycle_monthly }},
+    bicycle: {{ pricing.bicycle_monthly|default:50000 }}
+};
+const walletBalance = {{ wallet.balance }};
+
+function updateVehicleType() {
+    const selectEl = document.getElementById('vehicleSelect');
+    const selectedOption = selectEl.options[selectEl.selectedIndex];
+    
+    if (selectedOption.value) {
+        const vehicleType = selectedOption.getAttribute('data-type');
+        document.getElementById('vehicleType').value = vehicleType;
+        
+        // Cập nhật hiển thị loại xe
+        updateVehicleDisplay(vehicleType, selectedOption.getAttribute('data-plate'));
+        updateTotal();
+    }
+}
+
+function updateVehicleDisplay(type, plate) {
+    // Hiển thị phần thông tin xe
+    document.getElementById('vehicleInfoDisplay').style.display = 'block';
+    
+    // Ẩn tất cả các card
+    document.querySelectorAll('.vehicle-display-card').forEach(card => {
+        card.style.display = 'none';
+    });
+    
+    // Hiển thị card tương ứng
+    const displayCard = document.getElementById('display-' + type);
+    if (displayCard) {
+        displayCard.style.display = 'block';
+        displayCard.querySelector('.vehicle-plate').textContent = 'Biển số: ' + plate;
+    }
+}
+
+function selectVehicle(type) {
+    document.getElementById('vehicleType').value = type;
+    // Highlight selected card
+    document.querySelectorAll('.vehicle-option').forEach(card => {
+        card.classList.remove('border-success');
+        card.style.borderWidth = '1px';
+    });
+    event.currentTarget.classList.add('border-success');
+    event.currentTarget.style.borderWidth = '3px';
+    updateTotal();
+}
+
+function updateTotal() {
+    const vehicleType = document.getElementById('vehicleType').value;
+    const duration = parseInt(document.getElementById('duration').value);
+    const monthlyPrice = pricing[vehicleType] || pricing.car;
+    const total = monthlyPrice * duration;
+    
+    document.getElementById('totalAmount').textContent = total.toLocaleString('vi-VN') + ' VNĐ';
+    document.getElementById('priceDetail').textContent = 
+        duration + ' tháng x ' + monthlyPrice.toLocaleString('vi-VN') + ' VNĐ';
+    
+    // Cập nhật số dư còn lại
+    const afterBalance = walletBalance - total;
+    const afterBalanceEl = document.getElementById('afterBalance');
+    afterBalanceEl.textContent = afterBalance.toLocaleString('vi-VN') + ' VNĐ';
+    
+    if (afterBalance < 0) {
+        afterBalanceEl.classList.remove('text-success');
+        afterBalanceEl.classList.add('text-danger');
+    } else {
+        afterBalanceEl.classList.remove('text-danger');
+        afterBalanceEl.classList.add('text-success');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Nếu có xe, chọn xe đầu tiên
+    const vehicleSelect = document.getElementById('vehicleSelect');
+    if (vehicleSelect && vehicleSelect.options.length > 1) {
+        vehicleSelect.selectedIndex = 1;
+        updateVehicleType();
+    }
+});
+</script>
+
+<style>
+.vehicle-option {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.vehicle-option:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+input[type="radio"] {
+    display: none;
+}
+</style>
+{% endblock %}

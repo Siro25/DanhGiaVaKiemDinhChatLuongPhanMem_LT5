@@ -1,0 +1,37 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block dashboard_content %}
+<div class="container mt-3">
+  <h4>Chi tiết phương tiện #{{ vehicle.pk }}</h4>
+  <table class="table">
+    <tr><th>Biển số</th><td>{{ vehicle.plate_number }}</td></tr>
+    <tr><th>Loại xe</th><td>{{ vehicle.get_vehicle_type_display }}</td></tr>
+    <tr><th>Chủ xe</th><td>{% if vehicle.customer %}<a href="{% url 'customers:customer_detail' vehicle.customer.pk %}" class="text-primary">{{ vehicle.customer.name }}</a>{% else %}-{% endif %}</td></tr>
+    <tr><th>Vào</th><td>{{ vehicle.check_in|date:"H:i d/m/Y" }}</td></tr>
+    <tr><th>Ra</th><td>{{ vehicle.check_out|default:"—" }}</td></tr>
+    <tr>
+      <th>Trạng thái đăng ký</th>
+      <td>
+        {% if vehicle.subscription_status %}
+          {% if 'Còn hạn' in vehicle.subscription_status %}
+            <span class="badge bg-success">{{ vehicle.subscription_status }}</span>
+          {% elif 'Hết hạn' in vehicle.subscription_status %}
+            <span class="badge bg-danger">{{ vehicle.subscription_status }}</span>
+          {% elif vehicle.subscription_status == 'Chưa đăng ký tháng' %}
+            <span class="badge bg-warning">{{ vehicle.subscription_status }}</span>
+          {% else %}
+            <span class="badge bg-secondary">{{ vehicle.subscription_status }}</span>
+          {% endif %}
+        {% else %}
+          <span class="badge bg-secondary">Không xác định</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% if vehicle.subscription_end %}
+    <tr><th>Hạn đăng ký</th><td>{{ vehicle.subscription_end|date:"d/m/Y" }}</td></tr>
+    {% endif %}
+  </table>
+  <a class="btn btn-secondary" href="{% url 'vehicles:vehicle_list' %}">Quay lại</a>
+  <a class="btn btn-primary" href="{% url 'vehicles:vehicle_edit' vehicle.pk %}">Sửa</a>
+</div>
+{% endblock %}

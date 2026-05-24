@@ -1,0 +1,107 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block title %}Chi tiết khách hàng{% endblock %}
+
+{% block dashboard_content %}
+<div class="container mt-4">
+    <h2>Chi tiết khách hàng</h2>
+    
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-borderless">
+                <tr>
+                    <th width="200">Tên khách hàng:</th>
+                    <td>{{ customer.name }}</td>
+                </tr>
+                <tr>
+                    <th>Số điện thoại:</th>
+                    <td>{{ customer.phone }}</td>
+                </tr>
+                <tr>
+                    <th>Email:</th>
+                    <td>
+                        {% if customer.email %}
+                            <a href="mailto:{{ customer.email }}">{{ customer.email }}</a>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Địa chỉ:</th>
+                    <td>{{ customer.address|default:"-" }}</td>
+                </tr>
+                <tr>
+                    <th>Phân loại khách:</th>
+                    <td>{{ customer.customer_type }}</td>
+                </tr>
+                <tr>
+                    <th>Loại xe:</th>
+                    <td>{{ customer.vehicle_type|default:"-" }}</td>
+                </tr>
+                <tr>
+                    <th>Biển số xe:</th>
+                    <td>
+                        {% if customer.vehicles.all %}
+                            {% for vehicle in customer.vehicles.all %}
+                                <span class="badge bg-primary me-1">
+                                    <i class="bi bi-car-front-fill"></i>
+                                    {{ vehicle.plate_number }}
+                                    <small>({{ vehicle.get_vehicle_type_display }})</small>
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span class="text-muted">Chưa có xe đăng ký</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <th>Ngày tạo:</th>
+                    <td>{{ customer.created_at|date:"d/m/Y H:i" }}</td>
+                </tr>
+            </table>
+            
+            <!-- Hiển thị thông tin subscription nếu có -->
+            {% if customer.subscriptions.all %}
+            <hr>
+            <h5>Thông tin gói dịch vụ</h5>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Ngày bắt đầu</th>
+                            <th>Ngày hết hạn</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in customer.subscriptions.all %}
+                        <tr>
+                            <td>{{ sub.start_date|date:"d/m/Y" }}</td>
+                            <td>{{ sub.end_date|date:"d/m/Y" }}</td>
+                            <td>
+                                {% if sub.is_active %}
+                                    <span class="badge bg-success">Đang hoạt động</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Hết hạn</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            
+            <div class="mt-3">
+                <a href="{% url 'customers:customer_edit' customer.id %}" class="btn btn-primary">
+                    <i class="bi bi-pencil"></i> Sửa
+                </a>
+                <a href="{% url 'customers:customer_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

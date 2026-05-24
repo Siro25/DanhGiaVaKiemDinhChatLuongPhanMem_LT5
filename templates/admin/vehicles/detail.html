@@ -1,0 +1,26 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Chi tiết phương tiện{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-3">
+  <h3>Chi tiết phương tiện</h3>
+  <div class="card mb-3">
+    <div class="card-body">
+      <h5>{{ vehicle.plate_number }}</h5>
+      <p><strong>Loại:</strong> {{ vehicle.get_vehicle_type_display }}</p>
+      <p><strong>Chủ sở hữu:</strong> {% if vehicle.customer %}<a href="{% url 'admin_customer_management' %}?search={{ vehicle.customer.name }}">{{ vehicle.customer.name }}</a>{% else %}-{% endif %}</p>
+      <p><strong>Gói dịch vụ:</strong> {{ vehicle.get_service_package_display }}</p>
+      <p><strong>Vị trí đỗ:</strong> {{ vehicle.parking_slot|default:'-' }}</p>
+      <p><strong>Màu xe:</strong> {{ vehicle.color|default:'-' }}</p>
+      <p><strong>Nhân viên xử lý:</strong> {% if vehicle.handled_by %}{{ vehicle.handled_by.full_name|default:vehicle.handled_by.username }}{% else %}-{% endif %}</p>
+    </div>
+  </div>
+
+  <h5>Lịch sử gửi</h5>
+  <!-- Placeholder: nếu có bảng lịch sử, show here. -->
+
+  <a class="btn btn-primary" href="{% url 'vehicles:vehicle_edit' vehicle.pk %}">Sửa</a>
+  <a class="btn btn-secondary" href="{% url 'vehicles:vehicle_list' %}">Quay lại</a>
+</div>
+{% endblock %}

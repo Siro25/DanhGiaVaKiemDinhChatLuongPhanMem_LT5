@@ -1,0 +1,88 @@
+{% extends 'admin/dashboard_admin.html' %}
+{% load static %}
+
+{% block page_title %}{% if vehicle %}Sửa phương tiện{% else %}Thêm phương tiện{% endif %}{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h3 class="card-title mb-4">{% if vehicle %}Sửa phương tiện{% else %}Thêm phương tiện{% endif %}</h3>
+
+      {% if not vehicle %}
+      <div class="alert alert-info mb-3">
+        <i class="fas fa-info-circle"></i> <strong>Lưu ý:</strong> Phương tiện sẽ tự động được đăng ký gói <strong>Vé tháng</strong> cho khách hàng gửi xe tháng.
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Biển số xe</label>
+            {{ form.plate_number }}
+            {% if form.plate_number.errors %}<div class="text-danger small mt-1">{{ form.plate_number.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Loại xe</label>
+            {{ form.vehicle_type }}
+            {% if form.vehicle_type.errors %}<div class="text-danger small mt-1">{{ form.vehicle_type.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Chủ phương tiện (Khách gửi tháng)</label>
+            {{ form.customer }}
+            {% if form.customer.errors %}<div class="text-danger small mt-1">{{ form.customer.errors.0 }}</div>{% endif %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Màu xe</label>
+            {{ form.color }}
+          </div>
+          <div class="col-md-12">
+            <label class="form-label">Hình ảnh (optional)</label>
+            <div class="d-flex align-items-center gap-3">
+              {{ form.image }}
+              <div id="preview-wrap">
+                {% if vehicle and vehicle.image %}
+                  <img id="img-preview" src="{{ vehicle.image.url }}" style="max-height:120px;" class="img-thumbnail"/>
+                {% else %}
+                  <img id="img-preview" src="#" style="max-height:120px; display:none;" class="img-thumbnail"/>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <button class="btn btn-primary me-2" type="submit">{% if vehicle %}Lưu thay đổi{% else %}Thêm phương tiện{% endif %}</button>
+          <a class="btn btn-outline-secondary" href="{% url 'vehicles:vehicle_list' %}">Hủy</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- image preview script -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const imgInput = document.querySelector('input[type="file"][name="{{ form.image.name }}"]');
+  const preview = document.getElementById('img-preview');
+  if (!imgInput) return;
+  imgInput.addEventListener('change', function(e){
+    const f = e.target.files[0];
+    if (!f) { preview.style.display = 'none'; return; }
+    const url = URL.createObjectURL(f);
+    preview.src = url;
+    preview.style.display = 'inline-block';
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,909 @@
+{% extends 'shared/dashboard_base.html' %}
+
+{% block title %}Quản lý thu phí - Admin{% endblock %}
+
+{% block extra_css %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-money-bill-wave"></i> Quản lý thu phí</h2>
+        <div class="d-flex gap-2">
+            <button class="btn btn-info" onclick="exportPaymentsExcel()">
+                <i class="fas fa-download"></i> Xuất Excel
+            </button>
+            
+            <!-- Data Cleaning Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-warning dropdown-toggle" type="button" id="cleanDataDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-broom"></i> Làm sạch dữ liệu
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="cleanDataDropdown">
+                    <li><a class="dropdown-item" href="#" onclick="showCleanOldDataModal()">
+                        <i class="fas fa-calendar-times"></i> Xóa dữ liệu cũ
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showCleanCancelledModal()">
+                        <i class="fas fa-times-circle"></i> Xóa giao dịch bị hủy
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showCleanDuplicatesModal()">
+                        <i class="fas fa-copy"></i> Xóa giao dịch trùng lặp
+                    </a></li>
+                </ul>
+            </div>
+            
+            <button class="btn btn-success" onclick="refreshData()">
+                <i class="fas fa-sync"></i> Làm mới
+            </button>
+        </div>
+    </div>
+
+    <!-- Revenue Dashboard -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6>Doanh thu hôm nay</h6>
+                            <h4>{{ today_revenue }}</h4>
+                            {% if daily_growth > 0 %}
+                            <small><i class="fas fa-arrow-up"></i> +{{ daily_growth|floatformat:1 }}%</small>
+                            {% elif daily_growth < 0 %}
+                            <small><i class="fas fa-arrow-down"></i> {{ daily_growth|floatformat:1 }}%</small>
+                            {% endif %}
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-coins fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6>Doanh thu tuần</h6>
+                            <h4>{{ week_revenue }}</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-week fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6>Doanh thu tháng</h6>
+                            <h4>{{ month_revenue }}</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6>Tỷ lệ thành công</h6>
+                            <h4>{{ success_rate|floatformat:1 }}%</h4>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-percentage fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-line"></i> Xu hướng doanh thu 7 ngày</h5>
+                </div>
+                <div class="card-body">
+                    <div id="revenue-trend-chart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-pie"></i> Phương thức thanh toán</h5>
+                </div>
+                <div class="card-body">
+                    {% for method in payment_method_stats %}
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>{{ method.method|title }}</span>
+                        <div>
+                            <span class="badge bg-primary">{{ method.count }}</span>
+                            <strong>{{ method.total_amount|floatformat:0 }} VNĐ</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-left-primary">
+                <div class="card-body">
+                    <div class="text-primary font-weight-bold">Tổng giao dịch</div>
+                    <div class="h5">{{ total_transactions }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-success">
+                <div class="card-body">
+                    <div class="text-success font-weight-bold">Đã thanh toán</div>
+                    <div class="h5">{{ paid_transactions }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-warning">
+                <div class="card-body">
+                    <div class="text-warning font-weight-bold">Chờ thanh toán</div>
+                    <div class="h5">{{ pending_transactions }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-left-danger">
+                <div class="card-body">
+                    <div class="text-danger font-weight-bold">Đã hủy</div>
+                    <div class="h5">{{ cancelled_transactions }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Filters -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter"></i> Bộ lọc nâng cao</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tìm kiếm</label>
+                    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Tên KH, SĐT, biển số...">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="status" class="form-select">
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Phương thức</label>
+                    <select name="method" class="form-select">
+                        {% for value, label in method_choices %}
+                        <option value="{{ value }}" {% if method_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Loại KH</label>
+                    <select name="customer_type" class="form-select">
+                        {% for value, label in customer_type_choices %}
+                        <option value="{{ value }}" {% if customer_type_filter == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Từ ngày</label>
+                    <input type="date" name="date_from" value="{{ date_from }}" class="form-control">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Đến ngày</label>
+                    <input type="date" name="date_to" value="{{ date_to }}" class="form-control">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary d-block w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top Customers -->
+    {% if top_customers_revenue %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-trophy"></i> Top khách hàng (theo doanh thu)</h5>
+                </div>
+                <div class="card-body">
+                    {% for customer in top_customers_revenue %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <strong>{{ customer.name }}</strong>
+                            <small class="text-muted d-block">{{ customer.transaction_count }} giao dịch</small>
+                        </div>
+                        <span class="badge bg-success">{{ customer.total_paid|floatformat:0 }} VNĐ</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-chart-bar"></i> Doanh thu theo loại khách</h5>
+                </div>
+                <div class="card-body">
+                    {% for item in customer_type_revenue %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ item.customer__customer_type|default:"Khác" }}</span>
+                        <div>
+                            <span class="badge bg-info">{{ item.count }}</span>
+                            <strong>{{ item.total_amount|floatformat:0 }} VNĐ</strong>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Payment Transactions Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-list"></i> Danh sách giao dịch
+                <span class="badge bg-secondary">{{ payments.paginator.count }} giao dịch</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Mã GD</th>
+                            <th>Khách hàng</th>
+                            <th>Phương tiện</th>
+                            <th>Số tiền</th>
+                            <th>Phương thức</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày tạo</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ forloop.counter|add:payments.start_index|add:"-1" }}</td>
+                            <td>
+                                <code>{{ payment.reference|default:payment.id }}</code>
+                            </td>
+                            <td>
+                                <div>
+                                    <strong>{{ payment.customer.name }}</strong>
+                                    <br><small class="text-muted">{{ payment.customer.phone|default:"-" }}</small>
+                                    <br>
+                                    {% if payment.customer.customer_type == 'Khách gửi tháng' %}
+                                        <span class="badge bg-success">Gửi tháng</span>
+                                    {% else %}
+                                        <span class="badge bg-info">Vãng lai</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if payment.vehicle %}
+                                    <div>
+                                        <strong>{{ payment.vehicle.plate_number }}</strong>
+                                        <br><small class="text-muted">{{ payment.vehicle.get_vehicle_type_display }}</small>
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ payment.amount|floatformat:0 }} VNĐ</strong>
+                            </td>
+                            <td>
+                                {{ payment.get_method_display|default:"-" }}
+                            </td>
+                            <td>
+                                {% if payment.status == 'paid' %}
+                                    <span class="badge bg-success">🟢 Đã thanh toán</span>
+                                {% elif payment.status == 'pending' %}
+                                    <span class="badge bg-warning">🟠 Chờ thanh toán</span>
+                                {% elif payment.status == 'cancelled' %}
+                                    <span class="badge bg-danger">❌ Đã hủy</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ payment.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ payment.created_at|date:"d/m/Y H:i" }}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'cards:payment_detail' payment.pk %}" class="btn btn-outline-info" title="Xem chi tiết">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if payment.status == 'pending' %}
+                                    <button class="btn btn-outline-success" onclick="approveTransaction({{ payment.pk }})" title="✔ Duyệt giao dịch">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger" onclick="rejectTransaction({{ payment.pk }})" title="❌ Từ chối giao dịch">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                    {% endif %}
+                                    <!-- Delete button for admin -->
+                                    <button class="btn btn-outline-danger" onclick="deleteTransaction({{ payment.pk }})" title="🗑️ Xóa giao dịch">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <i class="fas fa-receipt fa-3x text-muted mb-2"></i>
+                                <p class="text-muted">Không có giao dịch nào phù hợp với bộ lọc</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if payments.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if payments.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Đầu</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ payments.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Trước</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ payments.number }} / {{ payments.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if payments.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ payments.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Sau</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ payments.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Cuối</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Revenue Trend Chart
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        var revenueDataStr = '{{ daily_revenue_trend|escapejs }}';
+        console.log('Raw revenue data string:', revenueDataStr);
+        
+        var revenueData = JSON.parse(revenueDataStr);
+        console.log('Parsed revenue data:', revenueData);
+        
+        // Ensure data exists and is valid
+        if (!revenueData || revenueData.length === 0) {
+            console.log('No revenue data found');
+            document.getElementById('revenue-trend-chart').innerHTML = '<p class="text-center text-muted">Không có dữ liệu biểu đồ</p>';
+            return;
+        }
+        
+        // Validate data structure
+        const validData = revenueData.every(item => 
+            item && typeof item.date === 'string' && typeof item.revenue === 'number'
+        );
+        
+        if (!validData) {
+            console.error('Invalid data structure:', revenueData);
+            document.getElementById('revenue-trend-chart').innerHTML = '<p class="text-center text-danger">Dữ liệu biểu đồ không hợp lệ</p>';
+            return;
+        }
+        
+        console.log('Revenue data is valid, creating chart...');
+    } catch (error) {
+        console.error('Error parsing chart data:', error);
+        document.getElementById('revenue-trend-chart').innerHTML = '<p class="text-center text-danger">Lỗi xử lý dữ liệu biểu đồ</p>';
+        return;
+    }
+    
+    var options = {
+        series: [{
+            name: 'Doanh thu (VNĐ)',
+            data: revenueData.map(item => ({
+                x: item.date,
+                y: parseFloat(item.revenue) || 0
+            }))
+        }],
+        chart: {
+            type: 'line',
+            height: 300,
+            toolbar: {
+                show: true
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function(value) {
+                if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M';
+                if (value >= 1000) return (value / 1000).toFixed(0) + 'K';
+                return value.toFixed(0);
+            }
+        },
+        xaxis: {
+            type: 'category',
+            categories: revenueData.map(item => item.date),
+            title: {
+                text: 'Ngày'
+            }
+        },
+        yaxis: {
+            title: {
+                text: 'Doanh thu (VNĐ)'
+            },
+            labels: {
+                formatter: function(value) {
+                    if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M VNĐ';
+                    if (value >= 1000) return (value / 1000).toFixed(0) + 'K VNĐ';
+                    return value.toFixed(0) + ' VNĐ';
+                }
+            },
+            min: 0
+        },
+        stroke: {
+            curve: 'smooth',
+            width: 3
+        },
+        colors: ['#28a745'],
+        title: {
+            text: 'Xu hướng doanh thu 7 ngày gần đây',
+            align: 'left'
+        },
+        grid: {
+            borderColor: '#e7e7e7',
+            row: {
+                colors: ['#f3f3f3', 'transparent'],
+                opacity: 0.5
+            }
+        },
+        markers: {
+            size: 4,
+            colors: undefined,
+            strokeColors: '#fff',
+            strokeWidth: 2,
+            hover: {
+                size: 6,
+            }
+        },
+        tooltip: {
+            y: {
+                formatter: function(value) {
+                    return value.toLocaleString('vi-VN') + ' VNĐ';
+                }
+            }
+        }
+    };
+
+    var chart = new ApexCharts(document.querySelector("#revenue-trend-chart"), options);
+    chart.render().catch(function(error) {
+        console.error('Error rendering chart:', error);
+        document.getElementById('revenue-trend-chart').innerHTML = '<p class="text-center text-danger">Lỗi hiển thị biểu đồ</p>';
+    });
+});
+
+function exportPaymentsExcel() {
+    try {
+        // Get current filter parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const search = urlParams.get('search') || '';
+        const status = urlParams.get('status') || '';
+        const method = urlParams.get('method') || '';
+        const customer_type = urlParams.get('customer_type') || '';
+        const date_from = urlParams.get('date_from') || '';
+        const date_to = urlParams.get('date_to') || '';
+        
+        // Create export URL with current parameters
+        let exportUrl = "{% url 'export_payments_excel' %}";
+        const params = new URLSearchParams();
+        
+        if (search) params.append('search', search);
+        if (status) params.append('status', status);
+        if (method) params.append('method', method);
+        if (customer_type) params.append('customer_type', customer_type);
+        if (date_from) params.append('date_from', date_from);
+        if (date_to) params.append('date_to', date_to);
+        
+        if (params.toString()) {
+            exportUrl += '?' + params.toString();
+        }
+        
+        // Show loading state
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xuất...';
+        btn.disabled = true;
+        
+        // Create download link
+        const link = document.createElement('a');
+        link.href = exportUrl;
+        link.download = 'payment_transactions.xlsx';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Có lỗi xảy ra khi xuất file Excel. Vui lòng thử lại!');
+        
+        // Reset button state
+        const btn = event.target.closest('button');
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-download"></i> Xuất Excel';
+            btn.disabled = false;
+        }
+    }
+}
+
+function refreshData() {
+    window.location.reload();
+}
+
+function markAsPaid(paymentId) {
+    if (confirm('Xác nhận đánh dấu giao dịch này đã thanh toán?')) {
+        // Implementation needed
+        alert('Chức năng sẽ được implement sau');
+    }
+}
+
+function cancelPayment(paymentId) {
+    if (confirm('Xác nhận hủy giao dịch này?')) {
+        // Implementation needed
+        alert('Chức năng sẽ được implement sau');
+    }
+}
+
+function approveTransaction(transactionId) {
+    if (confirm('Xác nhận duyệt giao dịch này?')) {
+        fetch(`{% url 'approve_transaction' 0 %}`.replace('0', transactionId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', data.message);
+                // Reload page to update status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showNotification('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'Có lỗi xảy ra khi duyệt giao dịch');
+        });
+    }
+}
+
+function rejectTransaction(transactionId) {
+    if (confirm('Xác nhận từ chối giao dịch này?')) {
+        fetch(`{% url 'reject_transaction' 0 %}`.replace('0', transactionId), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'same-origin',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('success', data.message);
+                // Reload page to update status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                showNotification('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('error', 'Có lỗi xảy ra khi từ chối giao dịch');
+        });
+    }
+}
+
+function showNotification(type, message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 3000);
+}
+
+// ==========================================
+// DATA CLEANING FUNCTIONS
+// ==========================================
+
+function showCleanOldDataModal() {
+    Swal.fire({
+        title: 'Xóa dữ liệu cũ',
+        html: `
+            <div class="mb-3">
+                <label for="days_input" class="form-label">Xóa dữ liệu cũ hơn (ngày):</label>
+                <input type="number" id="days_input" class="form-control" value="30" min="1" max="365">
+                <small class="form-text text-muted">
+                    Sẽ xóa: giao dịch bị hủy/chờ thanh toán, xe và khách hàng chưa đăng ký
+                </small>
+            </div>
+            <div class="alert alert-warning">
+                <strong>Cảnh báo:</strong> Thao tác này không thể hoàn tác!
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xác nhận xóa',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#dc3545',
+        preConfirm: () => {
+            const days = document.getElementById('days_input').value;
+            if (!days || days < 1) {
+                Swal.showValidationMessage('Vui lòng nhập số ngày hợp lệ');
+                return false;
+            }
+            return days;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            cleanOldData(result.value);
+        }
+    });
+}
+
+function showCleanCancelledModal() {
+    Swal.fire({
+        title: 'Xóa giao dịch bị hủy',
+        text: 'Xóa tất cả giao dịch có trạng thái "Đã hủy". Thao tác này không thể hoàn tác!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xác nhận xóa',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#dc3545'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            cleanCancelledTransactions();
+        }
+    });
+}
+
+function showCleanDuplicatesModal() {
+    Swal.fire({
+        title: 'Xóa giao dịch trùng lặp',
+        text: 'Xóa giao dịch trùng lặp (cùng khách hàng, phương tiện, ngày). Giữ lại giao dịch mới nhất. Thao tác này không thể hoàn tác!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xác nhận xóa',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#dc3545'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            cleanDuplicateTransactions();
+        }
+    });
+}
+
+function cleanOldData(days) {
+    const formData = new FormData();
+    formData.append('days', days);
+    formData.append('confirm', 'true');
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "clean_old_data" %}', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            Swal.fire('Thành công!', 'Đã xóa dữ liệu cũ thành công', 'success').then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire('Lỗi!', 'Có lỗi xảy ra khi xóa dữ liệu', 'error');
+        }
+    }).catch(error => {
+        Swal.fire('Lỗi!', 'Không thể kết nối với máy chủ', 'error');
+    });
+}
+
+function cleanCancelledTransactions() {
+    const formData = new FormData();
+    formData.append('confirm', 'true');
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "clean_cancelled_transactions" %}', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            Swal.fire('Thành công!', 'Đã xóa giao dịch bị hủy thành công', 'success').then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire('Lỗi!', 'Có lỗi xảy ra khi xóa dữ liệu', 'error');
+        }
+    }).catch(error => {
+        Swal.fire('Lỗi!', 'Không thể kết nối với máy chủ', 'error');
+    });
+}
+
+function cleanDuplicateTransactions() {
+    const formData = new FormData();
+    formData.append('confirm', 'true');
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "clean_duplicate_transactions" %}', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            Swal.fire('Thành công!', 'Đã xóa giao dịch trùng lặp thành công', 'success').then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire('Lỗi!', 'Có lỗi xảy ra khi xóa dữ liệu', 'error');
+        }
+    }).catch(error => {
+        Swal.fire('Lỗi!', 'Không thể kết nối với máy chủ', 'error');
+    });
+}
+
+// ==========================================
+// DELETE SPECIFIC TRANSACTION
+// ==========================================
+
+function deleteTransaction(transactionId) {
+    // First, get transaction info
+    fetch(`{% url 'delete_specific_transaction' 0 %}`.replace('0', transactionId), {
+        method: 'GET'
+    }).then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            Swal.fire('Lỗi!', data.error, 'error');
+            return;
+        }
+        
+        const transaction = data.transaction;
+        
+        Swal.fire({
+            title: 'Xóa giao dịch?',
+            html: `
+                <div class="text-left">
+                    <p><strong>Mã GD:</strong> ${transaction.id}</p>
+                    <p><strong>Số tiền:</strong> ${transaction.amount.toLocaleString()} VND</p>
+                    <p><strong>Phương thức:</strong> ${transaction.method}</p>
+                    <p><strong>Trạng thái:</strong> ${transaction.status}</p>
+                    <p><strong>Khách hàng:</strong> ${transaction.customer}</p>
+                    <p><strong>Ngày tạo:</strong> ${transaction.created_at}</p>
+                </div>
+                <div class="alert alert-danger mt-3">
+                    <strong>Cảnh báo:</strong> Thao tác này không thể hoàn tác!
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Xác nhận xóa',
+            cancelButtonText: 'Hủy',
+            confirmButtonColor: '#dc3545'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                executeDeleteTransaction(transactionId);
+            }
+        });
+    }).catch(error => {
+        Swal.fire('Lỗi!', 'Không thể lấy thông tin giao dịch', 'error');
+    });
+}
+
+function executeDeleteTransaction(transactionId) {
+    const formData = new FormData();
+    formData.append('confirm', 'true');
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch(`{% url 'delete_specific_transaction' 0 %}`.replace('0', transactionId), {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            Swal.fire('Thành công!', 'Đã xóa giao dịch thành công', 'success').then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire('Lỗi!', 'Có lỗi xảy ra khi xóa giao dịch', 'error');
+        }
+    }).catch(error => {
+        Swal.fire('Lỗi!', 'Không thể kết nối với máy chủ', 'error');
+    });
+}
+</script>
+
+<style>
+.border-left-primary {
+    border-left: 4px solid #007bff;
+}
+.border-left-success {
+    border-left: 4px solid #28a745;
+}
+.border-left-warning {
+    border-left: 4px solid #ffc107;
+}
+.border-left-danger {
+    border-left: 4px solid #dc3545;
+}
+</style>
+{% endblock %}

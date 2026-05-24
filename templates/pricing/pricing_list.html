@@ -1,0 +1,147 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+{% load static %}
+
+{% block title %}Bảng Giá Dịch Vụ{% endblock %}
+
+{% block dashboard_content %}
+    <div class="main-title">
+        <p class="font-weight-bold">BẢNG GIÁ DỊCH VỤ PARKING</p>
+    </div>
+
+    <div class="row">
+        <!-- Bảng giá khách gửi tháng -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="material-icons-outlined">card_membership</i>
+                        GIÁ VÉ THÁNG
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th><i class="material-icons-outlined">directions_car</i> Loại Xe</th>
+                                    <th><i class="material-icons-outlined">attach_money</i> Giá</th>
+                                    <th><i class="material-icons-outlined">schedule</i> Thời Hạn</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pricing in monthly_pricing %}
+                                <tr>
+                                    <td>
+                                        {% if pricing.vehicle_type == 'Xe máy' %}
+                                            <i class="material-icons-outlined text-info">two_wheeler</i>
+                                        {% elif pricing.vehicle_type == 'Ô tô' %}
+                                            <i class="material-icons-outlined text-success">directions_car</i>
+                                        {% else %}
+                                            <i class="material-icons-outlined text-warning">pedal_bike</i>
+                                        {% endif %}
+                                        {{ pricing.vehicle_type }}
+                                    </td>
+                                    <td class="fw-bold text-primary">
+                                        {{ pricing.formatted_price }} VNĐ
+                                    </td>
+                                    <td><span class="badge bg-info">{{ pricing.duration }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Chưa có bảng giá</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bảng giá khách vãng lai -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="material-icons-outlined">local_parking</i>
+                        GIÁ GỬI LƯỢT
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th><i class="material-icons-outlined">directions_car</i> Loại Xe</th>
+                                    <th><i class="material-icons-outlined">attach_money</i> Giá</th>
+                                    <th><i class="material-icons-outlined">schedule</i> Đơn Vị</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pricing in guest_pricing %}
+                                <tr>
+                                    <td>
+                                        {% if pricing.vehicle_type == 'Xe máy' %}
+                                            <i class="material-icons-outlined text-info">two_wheeler</i>
+                                        {% elif pricing.vehicle_type == 'Ô tô' %}
+                                            <i class="material-icons-outlined text-success">directions_car</i>
+                                        {% else %}
+                                            <i class="material-icons-outlined text-warning">pedal_bike</i>
+                                        {% endif %}
+                                        {{ pricing.vehicle_type }}
+                                    </td>
+                                    <td class="fw-bold {% if pricing.price == 0 %}text-success{% else %}text-danger{% endif %}">
+                                        {% if pricing.price == 0 %}
+                                            MIỄN PHÍ
+                                        {% else %}
+                                            {{ pricing.formatted_price }} VNĐ
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="badge bg-secondary">{{ pricing.duration }}</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">Chưa có bảng giá</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ghi chú -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6><i class="material-icons-outlined">info</i> Ghi Chú:</h6>
+                <ul class="mb-0">
+                    <li><strong>Vé tháng:</strong> Có hiệu lực 30 ngày kể từ ngày đăng ký</li>
+                    <li><strong>Gửi lượt:</strong> Tính theo mỗi lần ra/vào bãi đỗ xe</li>
+                    <li><strong>Xe đạp:</strong> Miễn phí cho khách vãng lai, khuyến khích sử dụng phương tiện xanh</li>
+                    <li><strong>Ô tô:</strong> Áp dụng cho xe con, SUV, pickup dưới 7 chỗ</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .card-header {
+            border-bottom: none;
+        }
+        .table th {
+            border-top: none;
+            font-weight: 600;
+        }
+        .material-icons-outlined {
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+    </style>
+{% endblock %}

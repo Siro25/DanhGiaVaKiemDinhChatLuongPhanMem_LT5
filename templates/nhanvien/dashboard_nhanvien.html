@@ -1,0 +1,408 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block dashboard_content %}
+    <div class="main-title">
+        <p class="font-weight-bold">DASHBOARD NHÂN VIÊN</p>
+    </div>
+
+    <div class="main-cards">
+        <div class="card">
+            <div class="card-inner">
+                <p class="text-primary">TỐNG XE RA/VÀO HÔM NAY</p>
+                <span class="material-icons-outlined text-blue">directions_car</span>
+            </div>
+            <span class="text-primary font-weight-bold">{{ today_vehicles }}</span>
+        </div>
+
+        <div class="card">
+            <div class="card-inner">
+                <p class="text-primary">TỔNG SỐ KHÁCH ĐĂNG KÍ THẺ THÁNG</p>
+                <span class="material-icons-outlined text-red">person_add</span>
+            </div>
+            <span class="text-primary font-weight-bold">{{ monthly_customers }}</span>
+        </div>
+
+        <div class="card">
+            <div class="card-inner">
+                <p class="text-primary">XE ĐANG GỬI</p>
+                <span class="material-icons-outlined text-orange">local_parking</span>
+            </div>
+            <span class="text-primary font-weight-bold">{{ current_vehicles }}</span>
+        </div>
+
+        <div class="card">
+            <div class="card-inner">
+                <p class="text-primary">THANH TOÁN HÔM NAY</p>
+                <span class="material-icons-outlined text-green">attach_money</span>
+            </div>
+            <span class="text-primary font-weight-bold">{{ today_payments }}</span>
+        </div>
+    </div>
+
+    <!-- Cards doanh thu -->
+    <div class="main-cards">
+        <div class="card">
+            <div class="card-inner">
+                <p class="text-primary">TỔNG DOANH THU HÔM NAY</p>
+                <span class="material-icons-outlined text-blue">monetization_on</span>
+            </div>
+            <span class="text-primary font-weight-bold">{{ today_revenue|floatformat:0 }} VNĐ</span>
+        </div>
+
+        <div class="card">
+            <div class="card-inner">
+                <p class="text-primary">TỔNG DOANH THU TUẦN NÀY</p>
+                <span class="material-icons-outlined text-orange">trending_up</span>
+            </div>
+            <span class="text-primary font-weight-bold">{{ week_revenue|floatformat:0 }} VNĐ</span>
+        </div>
+
+        <div class="card">
+            <div class="card-inner">
+                <p class="text-primary">TỔNG DOANH THU THÁNG NÀY</p>
+                <span class="material-icons-outlined text-green">account_balance_wallet</span>
+            </div>
+            <span class="text-primary font-weight-bold">{{ month_revenue|floatformat:0 }} VNĐ</span>
+        </div>
+    </div>
+
+    <div class="charts">
+        <div class="charts-card">
+            <p class="chart-title">Tổng xe ra/vào theo ngày (7 ngày gần đây)</p>
+            <div id="bar-chart"></div>
+        </div>
+
+        <div class="charts-card">
+            <p class="chart-title">Doanh thu theo ngày (7 ngày gần đây)</p>
+            <div id="revenue-chart"></div>
+        </div>
+
+        <div class="charts-card">
+            <p class="chart-title">Khách đăng ký theo tháng (6 tháng gần đây)</p>
+            <div id="area-chart"></div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // BAR CHART - Xe ra/vào theo ngày
+        var barChartOptions = {
+          series: [{
+            name: 'Tổng xe ra/vào',
+            data: [{% for stat in daily_stats %}{{ stat.vehicles }}{% if not forloop.last %},{% endif %}{% endfor %}]
+          }],
+          chart: {
+            type: 'bar',
+            background: 'transparent',
+            height: 350,
+            toolbar: {
+              show: false,
+            },
+          },
+          colors: [
+            '#2962ff',
+          ],
+          plotOptions: {
+            bar: {
+              distributed: true,
+              borderRadius: 4,
+              horizontal: false,
+              columnWidth: '40%',
+            }
+          },
+          dataLabels: {
+            enabled: false,
+          },
+          fill: {
+            opacity: 1,
+          },
+          grid: {
+            borderColor: '#55596e',
+            yaxis: {
+              lines: {
+                show: true,
+              },
+            },
+            xaxis: {
+              lines: {
+                show: true,
+              },
+            },
+          },
+          legend: {
+            labels: {
+              colors: '#f5f7ff',
+            },
+            show: true,
+            position: 'top',
+          },
+          stroke: {
+            colors: ['transparent'],
+            show: true,
+            width: 2
+          },
+          tooltip: {
+            shared: true,
+            intersect: false,
+            theme: 'dark',
+          },
+          xaxis: {
+            categories: [{% for stat in daily_stats %}'{{ stat.date }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            title: {
+              style: {
+                color: '#f5f7ff',
+              },
+            },
+            axisBorder: {
+              show: true,
+              color: '#55596e',
+            },
+            axisTicks: {
+              show: true,
+              color: '#55596e',
+            },
+            labels: {
+              style: {
+                colors: '#f5f7ff',
+              },
+            },
+          },
+          yaxis: {
+            title: {
+              text: 'Số lượng xe',
+              style: {
+                color: '#f5f7ff',
+              },
+            },
+            labels: {
+              style: {
+                colors: ['#f5f7ff'],
+              },
+            },
+          }
+        };
+
+        console.log('Bar chart data:', [{% for stat in daily_stats %}{{ stat.vehicles }}{% if not forloop.last %},{% endif %}{% endfor %}]);
+        console.log('Bar chart categories:', [{% for stat in daily_stats %}'{{ stat.date }}'{% if not forloop.last %},{% endif %}{% endfor %}]);
+
+        var barChart = new ApexCharts(document.querySelector("#bar-chart"), barChartOptions);
+        barChart.render();
+
+        // REVENUE CHART - Doanh thu theo ngày
+        var revenueChartOptions = {
+          series: [{
+            name: 'Doanh thu (VNĐ)',
+            data: [{% for stat in daily_revenue_stats %}{{ stat.revenue|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]
+          }],
+          chart: {
+            type: 'line',
+            background: 'transparent',
+            height: 350,
+            toolbar: {
+              show: false,
+            },
+          },
+          colors: [
+            '#00d25b',
+          ],
+          dataLabels: {
+            enabled: true,
+            formatter: function (val) {
+              return new Intl.NumberFormat('vi-VN').format(val) + ' VNĐ';
+            },
+          },
+          fill: {
+            gradient: {
+              enabled: true,
+              opacityFrom: 0.7,
+              opacityTo: 0.3,
+            },
+          },
+          grid: {
+            borderColor: '#55596e',
+            yaxis: {
+              lines: {
+                show: true,
+              },
+            },
+            xaxis: {
+              lines: {
+                show: true,
+              },
+            },
+          },
+          legend: {
+            labels: {
+              colors: '#f5f7ff',
+            },
+            show: true,
+            position: 'top',
+          },
+          markers: {
+            size: 6,
+            strokeColors: '#1b2635',
+            strokeWidth: 3,
+          },
+          stroke: {
+            curve: 'smooth',
+            width: 2,
+          },
+          tooltip: {
+            shared: true,
+            intersect: false,
+            theme: 'dark',
+            y: {
+              formatter: function (val) {
+                return new Intl.NumberFormat('vi-VN').format(val) + ' VNĐ';
+              }
+            }
+          },
+          xaxis: {
+            categories: [{% for stat in daily_revenue_stats %}'{{ stat.date }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            title: {
+              style: {
+                color: '#f5f7ff',
+              },
+            },
+            axisBorder: {
+              show: true,
+              color: '#55596e',
+            },
+            axisTicks: {
+              show: true,
+              color: '#55596e',
+            },
+            labels: {
+              style: {
+                colors: '#f5f7ff',
+              },
+            },
+          },
+          yaxis: {
+            title: {
+              text: 'Doanh thu (VNĐ)',
+              style: {
+                color: '#f5f7ff',
+              },
+            },
+            labels: {
+              style: {
+                colors: ['#f5f7ff'],
+              },
+              formatter: function (val) {
+                return new Intl.NumberFormat('vi-VN').format(val);
+              }
+            },
+          }
+        };
+
+        console.log('Revenue chart data:', [{% for stat in daily_revenue_stats %}{{ stat.revenue|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}]);
+        console.log('Revenue chart categories:', [{% for stat in daily_revenue_stats %}'{{ stat.date }}'{% if not forloop.last %},{% endif %}{% endfor %}]);
+
+        var revenueChart = new ApexCharts(document.querySelector("#revenue-chart"), revenueChartOptions);
+        revenueChart.render();
+
+        // AREA CHART - Khách đăng ký theo tháng  
+        var areaChartOptions = {
+          series: [{
+            name: 'Số khách đăng ký',
+            data: [{% for stat in monthly_stats %}{{ stat.customers }}{% if not forloop.last %},{% endif %}{% endfor %}]
+          }],
+          chart: {
+            type: 'area',
+            background: 'transparent',
+            height: 350,
+            stacked: false,
+            toolbar: {
+              show: false,
+            },
+          },
+          colors: ['#00ab57'],
+          labels: [{% for stat in monthly_stats %}'{{ stat.month }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+          dataLabels: {
+            enabled: false,
+          },
+          fill: {
+            gradient: {
+              opacityFrom: 0.4,
+              opacityTo: 0.1,
+              shadeIntensity: 1,
+              stops: [0, 100],
+              type: "vertical"
+            },
+            type: "gradient"
+          },
+          grid: {
+            borderColor: '#55596e',
+            yaxis: {
+              lines: {
+                show: true,
+              },
+            },
+            xaxis: {
+              lines: {
+                show: true,
+              },
+            },
+          },
+          legend: {
+            labels: {
+              colors: '#f5f7ff',
+            },
+            show: true,
+            position: 'top',
+          },
+          markers: {
+            size: 6,
+            strokeColors: '#1b2635',
+            strokeWidth: 3,
+          },
+          stroke: {
+            curve: 'smooth'
+          },
+          xaxis: {
+            axisBorder: {
+              color: '#55596e',
+              show: true,
+            },
+            axisTicks: {
+              color: '#55596e',
+              show: true,
+            },
+            labels: {
+              offsetY: 5,
+              style: {
+                colors: '#f5f7ff',
+              },
+            },
+          },
+          yaxis: [
+            {
+              title: {
+                text: 'Số khách hàng',
+                style: {
+                  color: '#f5f7ff',
+                },
+              },
+              labels: {
+                style: {
+                  colors: ['#f5f7ff'],
+                },
+              },
+            },
+          ],
+          tooltip: {
+            shared: true,
+            intersect: false,
+            theme: 'dark',
+          }
+        };
+
+        console.log('Area chart data:', [{% for stat in monthly_stats %}{{ stat.customers }}{% if not forloop.last %},{% endif %}{% endfor %}]);
+        console.log('Area chart labels:', [{% for stat in monthly_stats %}'{{ stat.month }}'{% if not forloop.last %},{% endif %}{% endfor %}]);
+
+        var areaChart = new ApexCharts(document.querySelector("#area-chart"), areaChartOptions);
+        areaChart.render();
+    });
+    </script>
+{% endblock %}

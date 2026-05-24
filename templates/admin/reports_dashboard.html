@@ -1,0 +1,771 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Báo cáo - Thống kê{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+  
+  <!-- Thống kê tổng quan -->
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="card text-white bg-primary">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title">Tổng khách hàng</h5>
+              <h2>{{ total_customers }}</h2>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-users fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card text-white bg-success">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title">Tổng phương tiện</h5>
+              <h2>{{ total_vehicles }}</h2>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-car fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card text-white bg-info">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title">Tổng nhân viên</h5>
+              <h2>{{ total_employees }}</h2>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-user-tie fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="card text-white bg-warning">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="card-title">Xe đang gửi</h5>
+              <h2>{{ vehicles_in }}</h2>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-parking fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thống kê doanh thu -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-chart-line"></i> Biểu đồ doanh thu</h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+          </div>
+          <div id="revenueChartError" class="text-center text-muted" style="display: none;">
+            <p>Không thể hiển thị biểu đồ</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-money-bill-wave"></i> Thống kê doanh thu</h5>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <span>Hôm nay:</span>
+              <strong class="text-success">{{ today_revenue|floatformat:0 }} VND</strong>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <span>Tuần này:</span>
+              <strong class="text-info">{{ week_revenue|floatformat:0 }} VND</strong>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <span>Tháng này:</span>
+              <strong class="text-primary">{{ month_revenue|floatformat:0 }} VND</strong>
+            </div>
+          </div>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <span>Năm nay:</span>
+              <strong class="text-warning">{{ year_revenue|floatformat:0 }} VND</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Biểu đồ tròn giao dịch -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-chart-pie"></i> Biểu đồ tròn trạng thái giao dịch</h5>
+        </div>
+        <div class="card-body text-center">
+          <div class="chart-container">
+            <canvas id="transactionChart"></canvas>
+          </div>
+          <div id="transactionChartError" class="text-center text-muted" style="display: none;">
+            <p>Không thể hiển thị biểu đồ giao dịch</p>
+          </div>
+          <div class="mt-3">
+            <div class="row text-center">
+              <div class="col-6">
+                <div class="mb-2">
+                  <h6>Tổng giao dịch</h6>
+                  <h4>{{ total_transactions }}</h4>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="mb-2">
+                  <h6>Đã thanh toán</h6>
+                  <h4 class="text-success">{{ paid_transactions }}</h4>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Biểu đồ cột loại phương tiện -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-chart-bar"></i> Biểu đồ loại phương tiện</h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="vehicleChart"></canvas>
+          </div>
+          <div id="vehicleChartError" class="text-center text-muted" style="display: none;">
+            <p>Không thể hiển thị biểu đồ loại phương tiện</p>
+          </div>
+          <div class="mt-3">
+            {% for vehicle in vehicle_stats %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span>
+                {% if vehicle.vehicle_type == 'bicycle' %}
+                  <i class="fas fa-bicycle text-success"></i> Xe đạp
+                {% elif vehicle.vehicle_type == 'motorcycle' %}
+                  <i class="fas fa-motorcycle text-primary"></i> Xe máy
+                {% elif vehicle.vehicle_type == 'car' %}
+                  <i class="fas fa-car text-info"></i> Ô tô
+                {% else %}
+                  <i class="fas fa-question text-secondary"></i> {{ vehicle.vehicle_type }}
+                {% endif %}
+              </span>
+              <span class="badge bg-primary">{{ vehicle.count }}</span>
+            </div>
+            {% empty %}
+            <p class="text-muted">Chưa có dữ liệu</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Biểu đồ trạng thái phương tiện -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-chart-pie"></i> Biểu đồ tròn trạng thái xe</h5>
+        </div>
+        <div class="card-body text-center">
+          <div class="chart-container">
+            <canvas id="vehicleStatusChart"></canvas>
+          </div>
+          <div id="vehicleStatusChartError" class="text-center text-muted" style="display: none;">
+            <p>Không thể hiển thị biểu đồ trạng thái xe</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Biểu đồ khách hàng theo loại -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-users"></i> Phân loại khách hàng</h5>
+        </div>
+        <div class="card-body">
+          <div class="chart-container">
+            <canvas id="customerTypeChart"></canvas>
+          </div>
+          <div id="customerTypeChartError" class="text-center text-muted" style="display: none;">
+            <p>Không thể hiển thị biểu đồ phân loại khách hàng</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top khách hàng -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-trophy"></i> Top khách hàng (theo số lượng phương tiện)</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Tên khách hàng</th>
+                  <th>Số điện thoại</th>
+                  <th>Phân loại</th>
+                  <th>Số phương tiện</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for customer in top_customers %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <a href="{% url 'admin_customer_management' %}?search={{ customer.name }}" class="text-decoration-none">
+                      {{ customer.name }}
+                    </a>
+                  </td>
+                  <td>{{ customer.phone }}</td>
+                  <td>
+                    <span class="badge {% if customer.customer_type == 'Khách gửi tháng' %}bg-success{% else %}bg-secondary{% endif %}">
+                      {{ customer.customer_type }}
+                    </span>
+                  </td>
+                  <td>
+                    <strong>{{ customer.vehicle_count }}</strong>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="5" class="text-center text-muted">Chưa có dữ liệu</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thống kê nhân viên chi tiết -->
+  <div class="row mt-4">
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-users-cog"></i> Thống kê nhân viên</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="text-success">{{ employees_active }}</h4>
+                <small class="text-muted">Đang hoạt động</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="text-warning">{{ employees_pending }}</h4>
+                <small class="text-muted">Chờ duyệt</small>
+              </div>
+            </div>
+          </div>
+          <div class="row mt-3">
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="text-primary">{{ employees_approved }}</h4>
+                <small class="text-muted">Đã duyệt</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="text-center">
+                <h4 class="text-danger">{{ employees_rejected }}</h4>
+                <small class="text-muted">Đã từ chối</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title"><i class="fas fa-chart-line"></i> Top nhân viên hoạt động</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên nhân viên</th>
+                  <th>Email</th>
+                  <th>Trạng thái</th>
+                  <th>KH quản lý</th>
+                  <th>PT quản lý</th>
+                  <th>GD quản lý</th>
+                  <th>Tổng hoạt động</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for stat in employee_stats %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <i class="fas fa-user-circle text-muted me-2"></i>
+                      {{ stat.employee.full_name|default:stat.employee.username }}
+                    </div>
+                  </td>
+                  <td>{{ stat.employee.email }}</td>
+                  <td>
+                    <span class="badge {% if stat.employee.status == 'approved' %}bg-success{% elif stat.employee.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                      {% if stat.employee.status == 'approved' %}Đã duyệt
+                      {% elif stat.employee.status == 'pending' %}Chờ duyệt
+                      {% else %}Từ chối{% endif %}
+                    </span>
+                  </td>
+                  <td><span class="badge bg-info">{{ stat.customers_managed }}</span></td>
+                  <td><span class="badge bg-primary">{{ stat.vehicles_managed }}</span></td>
+                  <td><span class="badge bg-success">{{ stat.transactions_managed }}</span></td>
+                  <td><strong>{{ stat.total_activities }}</strong></td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="8" class="text-center text-muted">Chưa có dữ liệu nhân viên</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Danh sách tất cả nhân viên -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0"><i class="fas fa-list"></i> Danh sách tất cả nhân viên</h5>
+          <small class="text-muted">Tổng: {{ all_employees.count }} nhân viên</small>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên đăng nhập</th>
+                  <th>Họ tên</th>
+                  <th>Email</th>
+                  <th>Trạng thái</th>
+                  <th>Ngày tạo</th>
+                  <th>Lần đăng nhập cuối</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for employee in all_employees %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>
+                    <code>{{ employee.username }}</code>
+                  </td>
+                  <td>{{ employee.full_name|default:"Chưa cập nhật" }}</td>
+                  <td>{{ employee.email }}</td>
+                  <td>
+                    <span class="badge {% if employee.status == 'approved' %}bg-success{% elif employee.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                      {% if employee.status == 'approved' %}Đã duyệt
+                      {% elif employee.status == 'pending' %}Chờ duyệt
+                      {% else %}Từ chối{% endif %}
+                    </span>
+                  </td>
+                  <td>{{ employee.date_joined|date:"d/m/Y" }}</td>
+                  <td>{{ employee.last_login|date:"d/m/Y H:i"|default:"Chưa đăng nhập" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="7" class="text-center text-muted">Không có nhân viên nào</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nút in báo cáo -->
+  <div class="row mt-4 mb-4">
+    <div class="col-md-12 text-center">
+      <button class="btn btn-primary" onclick="window.print()">
+        <i class="fas fa-print"></i> In báo cáo
+      </button>
+      <button class="btn btn-success ms-2" onclick="exportToExcel()">
+        <i class="fas fa-file-excel"></i> Xuất Excel
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* Kích thước cố định cho canvas để tránh phóng to/thu nhỏ */
+canvas {
+  width: 100% !important;
+  height: 300px !important;
+}
+
+/* Đặc biệt cho biểu đồ tròn - làm cho legend đẹp hơn */
+#transactionChart, #vehicleStatusChart {
+  height: 280px !important;
+}
+
+/* Style cho legend của biểu đồ tròn */
+.chart-container canvas + div {
+  margin-top: 10px;
+}
+
+/* Đảm bảo card không bị overflow */
+.card-body {
+  overflow: hidden;
+  position: relative;
+}
+
+/* Container cho biểu đồ với kích thước cố định */
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+}
+
+@media print {
+  .btn, .nav, .admin-sidebar {
+    display: none !important;
+  }
+  .admin-content {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+}
+</style>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Chart.js version:', Chart.version);
+    
+    // Dữ liệu doanh thu từ Django
+    const todayRevenue = parseFloat('{{ today_revenue|default:"0" }}');
+    const weekRevenue = parseFloat('{{ week_revenue|default:"0" }}');
+    const monthRevenue = parseFloat('{{ month_revenue|default:"0" }}');
+    const yearRevenue = parseFloat('{{ year_revenue|default:"0" }}');
+    
+    console.log('Revenue data:', {
+        today: todayRevenue,
+        week: weekRevenue, 
+        month: monthRevenue,
+        year: yearRevenue
+    });
+    
+    // Tạo biểu đồ doanh thu
+    const revenueCanvas = document.getElementById('revenueChart');
+    if (revenueCanvas && Chart) {
+        try {
+            new Chart(revenueCanvas, {
+                type: 'line',
+                data: {
+                    labels: ['Hôm nay', 'Tuần này', 'Tháng này', 'Năm nay'],
+                    datasets: [{
+                        label: 'Doanh thu (VND)',
+                        data: [todayRevenue, weekRevenue, monthRevenue, yearRevenue],
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value/1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
+                                        return (value/1000).toFixed(0) + 'K';
+                                    }
+                                    return value;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' VND';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Biểu đồ doanh thu tạo thành công!');
+        } catch (error) {
+            console.error('Lỗi tạo biểu đồ:', error);
+            const errorDiv = document.getElementById('revenueChartError');
+            if (errorDiv) {
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '<div class="alert alert-warning">Lỗi hiển thị biểu đồ: ' + error.message + '</div>';
+            }
+        }
+    } else {
+        console.error('Canvas hoặc Chart.js không tìm thấy');
+        const errorDiv = document.getElementById('revenueChartError');
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<div class="alert alert-danger">Không thể tải Chart.js</div>';
+        }
+    }
+    
+    // Tạo biểu đồ giao dịch
+    const transactionCanvas = document.getElementById('transactionChart');
+    if (transactionCanvas && Chart) {
+        try {
+            const paidTxn = parseInt('{{ paid_transactions|default:"0" }}');
+            const pendingTxn = parseInt('{{ pending_transactions|default:"0" }}');
+            const cancelledTxn = parseInt('{{ cancelled_transactions|default:"0" }}');
+            
+            new Chart(transactionCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Đã thanh toán', 'Chờ thanh toán', 'Đã hủy'],
+                    datasets: [{
+                        data: [paidTxn, pendingTxn, cancelledTxn],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            console.log('Biểu đồ giao dịch tạo thành công!');
+        } catch (error) {
+            console.error('Lỗi tạo biểu đồ giao dịch:', error);
+        }
+    }
+    
+    // Tạo biểu đồ loại phương tiện
+    const vehicleCanvas = document.getElementById('vehicleChart');
+    if (vehicleCanvas && Chart) {
+        try {
+            {% if vehicle_stats %}
+            const vehicleLabels = [
+                {% for vehicle in vehicle_stats %}
+                '{% if vehicle.vehicle_type == "bicycle" %}Xe đạp{% elif vehicle.vehicle_type == "motorcycle" %}Xe máy{% elif vehicle.vehicle_type == "car" %}Ô tô{% else %}{{ vehicle.vehicle_type }}{% endif %}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+            const vehicleCounts = [
+                {% for vehicle in vehicle_stats %}
+                {{ vehicle.count }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+            {% else %}
+            const vehicleLabels = ['Chưa có dữ liệu'];
+            const vehicleCounts = [0];
+            {% endif %}
+            
+            new Chart(vehicleCanvas, {
+                type: 'bar',
+                data: {
+                    labels: vehicleLabels,
+                    datasets: [{
+                        label: 'Số lượng',
+                        data: vehicleCounts,
+                        backgroundColor: ['#007bff', '#28a745', '#ffc107', '#dc3545'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Biểu đồ phương tiện tạo thành công!');
+        } catch (error) {
+            console.error('Lỗi tạo biểu đồ phương tiện:', error);
+        }
+    }
+    
+    // Tạo biểu đồ phân loại khách hàng  
+    const customerTypeCanvas = document.getElementById('customerTypeChart');
+    if (customerTypeCanvas && Chart) {
+        try {
+            {% if customer_type_stats %}
+            const customerLabels = [
+                {% for customer_type in customer_type_stats %}
+                '{{ customer_type.customer_type }}'{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+            const customerCounts = [
+                {% for customer_type in customer_type_stats %}
+                {{ customer_type.count }}{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ];
+            {% else %}
+            const customerLabels = ['Chưa có dữ liệu'];
+            const customerCounts = [0];
+            {% endif %}
+            
+            new Chart(customerTypeCanvas, {
+                type: 'bar',
+                data: {
+                    labels: customerLabels,
+                    datasets: [{
+                        label: 'Số lượng khách hàng',
+                        data: customerCounts,
+                        backgroundColor: ['#6f42c1', '#20c997', '#fd7e14', '#e83e8c'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Biểu đồ khách hàng tạo thành công!');
+        } catch (error) {
+            console.error('Lỗi tạo biểu đồ khách hàng:', error);
+        }
+    }
+    
+    // Tạo biểu đồ trạng thái xe
+    const vehicleStatusCanvas = document.getElementById('vehicleStatusChart');
+    if (vehicleStatusCanvas && Chart) {
+        try {
+            const vehiclesIn = parseInt('{{ vehicles_in|default:"0" }}');
+            const vehiclesOut = parseInt('{{ vehicles_out|default:"0" }}');
+            
+            new Chart(vehicleStatusCanvas, {
+                type: 'pie',
+                data: {
+                    labels: ['🅿️ Đang gửi xe', '🚗 Đã ra về'],
+                    datasets: [{
+                        data: [vehiclesIn, vehiclesOut],
+                        backgroundColor: ['#ff6b35', '#4caf50'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${label}: ${value} xe (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            console.log('Biểu đồ trạng thái xe tạo thành công!');
+        } catch (error) {
+            console.error('Lỗi tạo biểu đồ trạng thái xe:', error);
+        }
+    }
+});
+</script>
+{% endblock %}

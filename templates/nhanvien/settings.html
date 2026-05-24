@@ -1,0 +1,464 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block dashboard_content %}
+    <div class="main-title">
+        <p class="font-weight-bold">CÀI ĐẶT NHÂN VIÊN</p>
+    </div>
+
+    <!-- Thông tin lương -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <span class="material-icons-outlined me-2">attach_money</span>
+                        Thông tin lương
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="salary-card text-center p-3 border rounded">
+                                <h6 class="text-muted">Lương cơ bản hiện tại</h6>
+                                <h4 class="text-primary">{{ salary.basic_salary|floatformat:0 }} VND</h4>
+                                <small class="text-muted">Tổng tiền có thể rút</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="salary-card text-center p-3 border rounded">
+                                <h6 class="text-muted">Đã rút</h6>
+                                <h4 class="text-danger">{{ salary.withdrawn|floatformat:0 }} VND</h4>
+                                <small class="text-muted">Tổng đã rút trước đó</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <span class="material-icons-outlined" style="font-size: 14px;">info</span>
+                            Cập nhật lần cuối: {{ salary.last_updated|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ca làm việc -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <span class="material-icons-outlined me-2">schedule</span>
+                        Ca làm việc
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if current_shift %}
+                        <!-- Đang trong ca làm việc -->
+                        <div class="text-center p-4">
+                            <div class="shift-timer mb-3">
+                                <h2 class="text-success mb-2">Ca làm việc đang diễn ra</h2>
+                                <p class="text-muted">Bắt đầu: {{ current_shift.start_time|date:"H:i d/m/Y" }}</p>
+                                
+                                <!-- Đồng hồ đếm ngược -->
+                                    <div id="countdown-timer" class="timer-display">
+                                    <div class="timer-circle">
+                                        <span id="timer-text">00:00:05</span>
+                                    </div>
+                                </div>                                <p class="text-info mt-3">Ca làm việc: 5 giây (Demo mode)</p>
+                            </div>
+                            
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="end_shift">
+                                <button type="submit" class="btn btn-danger btn-lg">
+                                    <span class="material-icons-outlined me-1">stop</span>
+                                    Kết thúc ca làm việc
+                                </button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <!-- Chưa bắt đầu ca làm việc -->
+                        <div class="text-center p-4">
+                            <span class="material-icons-outlined text-muted mb-3" style="font-size: 64px;">play_circle</span>
+                            <h4 class="mb-3">Sẵn sàng bắt đầu ca làm việc</h4>
+                            <p class="text-muted mb-4">Nhấn nút bên dưới để bắt đầu ca làm việc 5 giây (Demo mode)</p>
+                            
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="start_shift">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <span class="material-icons-outlined me-1">play_arrow</span>
+                                    Bắt đầu làm
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form rút lương -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning text-white">
+                    <h5 class="mb-0">
+                        <span class="material-icons-outlined me-2">money_off</span>
+                        Rút lương
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="withdraw">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Số tiền muốn rút (VND)</label>
+                            <input type="number" class="form-control" id="amount" name="amount" 
+                                   min="1" step="1" placeholder="Nhập số tiền muốn rút" required>
+                            <small class="text-muted">Thông tin số dư sẽ hiển thị ở đây</small>
+                        </div>
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">Lý do rút lương (tùy chọn)</label>
+                                <textarea class="form-control" id="reason" name="reason" rows="3" 
+                                          placeholder="Nhập lý do rút lương..."></textarea>
+                            </div>
+                            <button type="submit" id="withdraw-btn" class="btn btn-warning w-100">
+                                <span class="material-icons-outlined me-1">send</span>
+                                Rút lương
+                            </button>
+                        </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lịch sử rút lương -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <span class="material-icons-outlined me-2">history</span>
+                        Lịch sử rút lương
+                    </h5>
+                </div>
+                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                    {% if withdraws %}
+                        {% for withdraw in withdraws %}
+                            <div class="withdraw-item p-3 mb-2 border rounded">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ withdraw.amount|floatformat:0 }} VND</h6>
+                                        <small class="text-muted">{{ withdraw.requested_at|date:"d/m/Y H:i" }}</small>
+                                        {% if withdraw.reason %}
+                                            <p class="mb-1 text-muted small">{{ withdraw.reason }}</p>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if withdraw.status == 'pending' %}
+                                            <span class="badge bg-warning">Chờ xử lý</span>
+                                        {% elif withdraw.status == 'approved' %}
+                                            <span class="badge bg-success">Đã duyệt</span>
+                                        {% elif withdraw.status == 'completed' %}
+                                            <span class="badge bg-success">Hoàn thành</span>
+                                        {% elif withdraw.status == 'rejected' %}
+                                            <span class="badge bg-danger">Từ chối</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ withdraw.status }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center p-4">
+                            <span class="material-icons-outlined text-muted" style="font-size: 48px;">history</span>
+                            <p class="text-muted mt-2">Chưa có lịch sử rút lương.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thông tin cá nhân -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <span class="material-icons-outlined me-2">person</span>
+                        Thông tin cá nhân
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Tên đăng nhập:</strong> {{ user.username }}</p>
+                            <p><strong>Họ và tên:</strong> {{ user.full_name|default:"Chưa cập nhật" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Email:</strong> {{ user.email|default:"Chưa cập nhật" }}</p>
+                            <p><strong>Số điện thoại:</strong> {{ user.phone_number|default:"Chưa cập nhật" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    {{ block.super }}
+    {% if current_shift %}
+    <script>
+        // Tính thời gian đếm ngược cho ca làm việc 5 giây (Demo mode)
+        const startTime = new Date('{{ current_shift.start_time|date:"c" }}');
+        const shiftDuration = 5 * 1000; // 5 giây tính bằng milliseconds
+        const endTime = new Date(startTime.getTime() + shiftDuration);
+        
+        function updateTimer() {
+            const now = new Date();
+            const remainingTime = endTime - now;
+            
+            if (remainingTime <= 0) {
+                // Ca làm việc đã kết thúc - Tự động kết thúc ca
+                document.getElementById('timer-text').textContent = '00:00:00';
+                document.getElementById('timer-text').style.color = '#dc3545';
+                
+                // Tự động gửi request kết thúc ca làm việc
+                fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: new URLSearchParams({
+                        'action': 'end_shift'
+                    })
+                }).then(response => {
+                    if (response.ok) {
+                        // Hiển thị thông báo thành công và reload
+                        alert('Ca làm việc 5 giây đã hoàn thành! Tự động kết thúc ca.');
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    }
+                }).catch(error => {
+                    console.error('Error ending shift:', error);
+                    // Vẫn reload trang nếu có lỗi
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                });
+                
+                // Dọn dẹp timer
+                clearInterval(timerInterval);
+                return;
+            }
+            
+            // Tính toán giờ, phút, giây còn lại
+            const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+            const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+            
+            // Format thành HH:MM:SS (hoặc chỉ hiển thị giây cho demo mode)
+            let formattedTime;
+            if (shiftDuration <= 60 * 1000) { // Nếu ca làm <= 1 phút, chỉ hiển thị giây
+                formattedTime = String(seconds).padStart(2, '0') + 's';
+            } else {
+                formattedTime = 
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+            }
+            
+            document.getElementById('timer-text').textContent = formattedTime;
+            
+            // Thay đổi màu dựa trên thời gian còn lại
+            const timerCircle = document.querySelector('.timer-circle');
+            const timerText = document.getElementById('timer-text');
+            
+            if (remainingTime <= 2 * 1000) { // 2 giây cuối cho demo mode
+                timerCircle.className = 'timer-circle danger';
+            } else if (remainingTime <= 3 * 1000) { // 3 giây cuối cho demo mode  
+                timerCircle.className = 'timer-circle warning';
+            } else {
+                timerCircle.className = 'timer-circle';
+            }
+        }
+        
+        // Cập nhật mỗi giây
+        updateTimer();
+        const timerInterval = setInterval(updateTimer, 1000);
+        
+        // Dọn dẹp khi rời khỏi trang
+        window.addEventListener('beforeunload', function() {
+            clearInterval(timerInterval);
+        });
+    </script>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    {{ block.super }}
+    <style>
+        .salary-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: transform 0.2s;
+        }
+        
+        .salary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .withdraw-item {
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+        
+        .withdraw-item:hover {
+            background: #e9ecef;
+        }
+        
+        .card {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: none;
+        }
+        
+        .card-header {
+            border-bottom: none;
+        }
+        
+        /* Timer styles */
+        .timer-display {
+            margin: 20px 0;
+        }
+        
+        .timer-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            box-shadow: 0 8px 32px rgba(40, 167, 69, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .timer-circle::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: inset 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        #timer-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+            z-index: 1;
+            position: relative;
+        }
+        
+        .shift-timer {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .timer-circle.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+        
+        .timer-circle.danger {
+            background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        }
+        
+        .timer-circle.warning #timer-text {
+            color: #856404;
+        }
+        
+        .timer-circle.danger #timer-text {
+            color: #721c24;
+        }
+    </style>
+
+    <script>
+        // Logic mới: Sử dụng trực tiếp lương cơ bản làm số tiền có thể rút
+        function updateAvailableAmount() {
+            const basicSalary = {{ salary.basic_salary|default:0 }};
+            const withdrawn = {{ salary.withdrawn|default:0 }};
+            
+            console.log('Salary Info:');
+            console.log('- Lương cơ bản (có thể rút):', basicSalary.toLocaleString(), 'VND');
+            console.log('- Tổng đã rút (lịch sử):', withdrawn.toLocaleString(), 'VND'); 
+            
+            const amountInput = document.getElementById('amount');
+            const smallText = document.querySelector('small.text-muted');
+            
+            if (amountInput && smallText) {
+                amountInput.max = basicSalary;
+                
+                // Hiển thị thông tin đơn giản
+                if (basicSalary > 0) {
+                    smallText.innerHTML = `Có thể rút: <strong>${basicSalary.toLocaleString()} VND</strong><br>
+                                          <small>Lịch sử rút: ${withdrawn.toLocaleString()} VND</small>`;
+                } else {
+                    smallText.innerHTML = `<span class="text-danger">Không có tiền để rút</span><br>
+                                          <small>Lịch sử rút: ${withdrawn.toLocaleString()} VND</small>`;
+                }
+                
+                // Quản lý trạng thái form
+                const submitBtn = document.getElementById('withdraw-btn'); // Target đúng nút rút lương
+                if (basicSalary <= 0) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="material-icons-outlined me-1">money_off</span>Không thể rút';
+                    submitBtn.className = 'btn btn-secondary w-100';
+                    amountInput.disabled = true;
+                    amountInput.placeholder = "Không có tiền để rút";
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span class="material-icons-outlined me-1">send</span>Rút lương';
+                    submitBtn.className = 'btn btn-warning w-100';
+                    amountInput.disabled = false;
+                    amountInput.placeholder = `Nhập số tiền (tối đa ${basicSalary.toLocaleString()} VND)`;
+                }
+            }
+        }
+        
+        // Validation khi nhập số tiền
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAvailableAmount();
+            
+            const amountInput = document.getElementById('amount');
+            if (amountInput) {
+                amountInput.addEventListener('input', function() {
+                    const maxAmount = {{ salary.basic_salary|default:0 }};
+                    const inputValue = parseFloat(this.value) || 0;
+                    
+                    if (inputValue > maxAmount) {
+                        this.setCustomValidity(`Số tiền vượt quá lương khả dụng (${maxAmount.toLocaleString()} VND)`);
+                    } else if (inputValue <= 0) {
+                        this.setCustomValidity('Số tiền phải lớn hơn 0');
+                    } else {
+                        this.setCustomValidity('');
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}

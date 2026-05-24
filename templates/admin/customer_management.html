@@ -1,0 +1,408 @@
+{% extends 'shared/dashboard_base.html' %}
+
+{% block title %}Quản lý khách hàng - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-user-friends"></i> Quản lý khách hàng</h2>
+        <div>
+            <button class="btn btn-info" onclick="exportData()">
+                <i class="fas fa-download"></i> Xuất Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Tổng khách hàng</h5>
+                            <h3>{{ total_customers }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Khách gửi tháng</h5>
+                            <h3>{{ monthly_customers }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Khách vãng lai</h5>
+                            <h3>{{ guest_customers }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-walking fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Mới trong tuần</h5>
+                            <h3>{{ new_customers_week }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-plus fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Tìm kiếm</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           value="{{ search }}" placeholder="Tên, SĐT, Địa chỉ, Biển số...">
+                </div>
+                <div class="col-md-2">
+                    <label for="subscription_status" class="form-label">Subscription</label>
+                    <select class="form-select" id="subscription_status" name="subscription_status">
+                        {% for value, display in subscription_status_choices %}
+                            <option value="{{ value }}" {% if subscription_status == value %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label for="date_from" class="form-label">Từ ngày</label>
+                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ date_from }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="date_to" class="form-label">Đến ngày</label>
+                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ date_to }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">&nbsp;</label>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Lọc
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer List with Tabs -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-3">
+                <i class="fas fa-list"></i> Danh sách khách hàng 
+                <span class="badge bg-secondary">{{ customers.paginator.count }} khách hàng</span>
+            </h5>
+            <!-- Navigation tabs -->
+            <ul class="nav nav-tabs" id="customerTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="all-tab" onclick="filterCustomers('all')" type="button">
+                        <i class="fas fa-users"></i> Tất cả ({{ customers.paginator.count }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="monthly-tab" onclick="filterCustomers('monthly')" type="button">
+                        <i class="fas fa-calendar-alt"></i> Khách gửi tháng ({{ monthly_customers }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="guest-tab" onclick="filterCustomers('guest')" type="button">
+                        <i class="fas fa-walking"></i> Khách vãng lai ({{ guest_customers }})
+                    </button>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- Filter Results Info -->
+        {% if search or subscription_status or date_from or date_to %}
+        <div class="card-body border-top bg-light">
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-filter"></i> 
+                <strong>Kết quả lọc:</strong>
+                {% if search %}
+                    Tìm kiếm: "<em>{{ search }}</em>"
+                {% endif %}
+                {% if subscription_status %}
+                    {% if search %} | {% endif %}
+                    Subscription: <strong>
+                        {% if subscription_status == 'active' %}Còn hạn
+                        {% elif subscription_status == 'expired' %}Hết hạn  
+                        {% elif subscription_status == 'none' %}Chưa đăng ký
+                        {% else %}{{ subscription_status }}{% endif %}
+                    </strong>
+                {% endif %}
+                {% if date_from %}
+                    {% if search or subscription_status %} | {% endif %}
+                    Từ ngày: <strong>{{ date_from }}</strong>
+                {% endif %}
+                {% if date_to %}
+                    {% if search or subscription_status or date_from %} đến {% else %}Đến ngày: {% endif %}
+                    <strong>{{ date_to }}</strong>
+                {% endif %}
+                - Tìm thấy <strong>{{ customers.paginator.count }}</strong> khách hàng
+                {% if customers.paginator.count != total_customers %}
+                    (trên tổng số {{ total_customers }} khách hàng)
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="card-body">
+            <!-- Single table for all customers -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Thông tin khách hàng</th>
+                            <th>Loại khách hàng</th>
+                            <th>Số xe</th>
+                            <th>Subscription</th>
+                            <th>Tổng thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th>Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr data-customer-type="{{ customer.customer_type }}">
+                            <td>{{ forloop.counter|add:customers.start_index|add:"-1" }}</td>
+                            <td>
+                                <div>
+                                    <strong>{{ customer.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-phone"></i> {{ customer.phone|default:"-" }}
+                                        {% if customer.email %}
+                                        <br><i class="fas fa-envelope"></i> {{ customer.email }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if customer.customer_type == 'Khách gửi tháng' %}
+                                    <span class="badge bg-success">Khách gửi tháng</span>
+                                {% else %}
+                                    <span class="badge bg-primary">Khách vãng lai</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ customer.vehicle_count }}</span>
+                            </td>
+                            <td>
+                                {% if customer.subscription_end %}
+                                    {% if customer.days_until_expiry > 0 %}
+                                        <small class="text-success">
+                                            <i class="fas fa-calendar-check"></i> 
+                                            {{ customer.subscription_end|date:"d/m/Y" }}
+                                            <br>({{ customer.days_until_expiry }} ngày)
+                                        </small>
+                                    {% else %}
+                                        <small class="text-danger">
+                                            <i class="fas fa-calendar-times"></i> 
+                                            {{ customer.subscription_end|date:"d/m/Y" }}
+                                            <br>Hết hạn
+                                        </small>
+                                    {% endif %}
+                                {% else %}
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-minus"></i> Chưa có
+                                    </small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ customer.total_paid_display|floatformat:0 }} VNĐ</strong>
+                            </td>
+                            <td>
+                                {% if customer.subscription_status == 'Còn hạn' %}
+                                    <span class="badge bg-success">{{ customer.subscription_status }}</span>
+                                {% elif customer.subscription_status == 'Hết hạn' %}
+                                    <span class="badge bg-danger">{{ customer.subscription_status }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ customer.subscription_status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="#" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#customerModal{{ customer.id }}">
+                                        <i class="fas fa-eye"></i> Xem
+                                    </a>
+                                    <a href="{% url 'customers:customer_edit' customer.pk %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-edit"></i> Sửa
+                                    </a>
+                                    <a href="{% url 'customers:customer_delete' customer.pk %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Xóa
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4">
+                                <i class="fas fa-user-slash fa-3x text-muted mb-2"></i>
+                                <p class="text-muted">Không có khách hàng nào phù hợp với bộ lọc</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if customers.has_other_pages %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% if customers.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if search %}&search={{ search }}{% endif %}{% if subscription_status %}&subscription_status={{ subscription_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Đầu</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ customers.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if subscription_status %}&subscription_status={{ subscription_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Trước</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">{{ customers.number }} / {{ customers.paginator.num_pages }}</span>
+                    </li>
+                    
+                    {% if customers.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ customers.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if subscription_status %}&subscription_status={{ subscription_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Sau</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ customers.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if subscription_status %}&subscription_status={{ subscription_status }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">Cuối</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function exportData() {
+    // Lấy current filter parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const search = urlParams.get('search') || '';
+    const subscription_status = urlParams.get('subscription_status') || '';
+    const date_from = urlParams.get('date_from') || '';
+    const date_to = urlParams.get('date_to') || '';
+    
+    // Tạo URL với các parameters hiện tại
+    let exportUrl = "{% url 'export_customers_excel' %}";
+    const params = new URLSearchParams();
+    
+    if (search) params.append('search', search);
+    if (subscription_status) params.append('subscription_status', subscription_status);
+    if (date_from) params.append('date_from', date_from);
+    if (date_to) params.append('date_to', date_to);
+    
+    if (params.toString()) {
+        exportUrl += '?' + params.toString();
+    }
+    
+    // Hiển thị loading message
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xuất...';
+    btn.disabled = true;
+    
+    // Download file
+    window.open(exportUrl, '_blank');
+    
+    // Reset button sau 2 giây
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+
+// Filter customers by type using JavaScript
+function filterCustomers(type) {
+    const rows = document.querySelectorAll('tbody tr[data-customer-type]');
+    
+    rows.forEach(row => {
+        const customerType = row.getAttribute('data-customer-type');
+        
+        if (type === 'all') {
+            row.style.display = '';
+        } else if (type === 'monthly' && customerType === 'Khách gửi tháng') {
+            row.style.display = '';
+        } else if (type === 'guest' && customerType === 'Khách vãng lai') {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Update active tab
+    document.querySelectorAll('.nav-link').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    document.getElementById(type + '-tab').classList.add('active');
+}
+
+// Date validation
+document.addEventListener('DOMContentLoaded', function() {
+    const dateFromInput = document.getElementById('date_from');
+    const dateToInput = document.getElementById('date_to');
+    
+    // Set max date to today
+    const today = new Date().toISOString().split('T')[0];
+    dateFromInput.max = today;
+    dateToInput.max = today;
+    
+    // Validate date range
+    function validateDateRange() {
+        const dateFrom = dateFromInput.value;
+        const dateTo = dateToInput.value;
+        
+        if (dateFrom && dateTo && dateFrom > dateTo) {
+            dateToInput.setCustomValidity('Ngày kết thúc phải sau ngày bắt đầu');
+            dateToInput.reportValidity();
+        } else {
+            dateToInput.setCustomValidity('');
+        }
+    }
+    
+    dateFromInput.addEventListener('change', function() {
+        if (this.value) {
+            dateToInput.min = this.value;
+        }
+        validateDateRange();
+    });
+    
+    dateToInput.addEventListener('change', validateDateRange);
+});
+</script>
+{% endblock %}

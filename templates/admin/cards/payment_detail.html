@@ -1,0 +1,28 @@
+{% extends 'admin/dashboard_admin.html' %}
+
+{% block page_title %}Chi tiết thanh toán{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-3">
+  <h4>Biên lai #{{ payment.pk }}</h4>
+  <p>Phương tiện: {% if payment.vehicle %}{{ payment.vehicle.plate_number }}{% else %}&mdash;{% endif %}</p>
+  <p>Thời gian: {{ payment.check_in|date:"d/m/Y H:i" }} → {{ payment.check_out|date:"d/m/Y H:i" }}</p>
+  <p>Tiền: {{ payment.amount }} — Thuế: {{ payment.tax }} — Tổng: <strong>{{ payment.total }}</strong></p>
+
+  {% if payment.status != 'paid' %}
+  <form method="post" action="{% url 'cards:mark_paid' payment.pk %}">
+    {% csrf_token %}
+    <select name="method" class="form-select mb-2">
+      <option value="cash">Tiền mặt</option>
+      <option value="card">Thẻ</option>
+      <option value="momo">MOMO</option>
+    </select>
+    <input name="reference" class="form-control mb-2" placeholder="Mã tham chiếu (nếu có)"/>
+    <button class="btn btn-success">Xác nhận thanh toán</button>
+  </form>
+  {% else %}
+  <span class="badge bg-success">Đã thanh toán</span>
+  {% endif %}
+  <a class="btn btn-secondary mt-2" href="{% url 'admin_payment_management' %}">Quay lại</a>
+</div>
+{% endblock %}

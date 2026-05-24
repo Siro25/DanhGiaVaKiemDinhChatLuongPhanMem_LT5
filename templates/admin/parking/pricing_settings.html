@@ -1,0 +1,139 @@
+{% extends 'admin/dashboard_admin.html' %}
+{% load parking_extras %}
+
+{% block page_title %}Cài đặt bảng giá{% endblock %}
+
+{% block admin_content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-cog"></i> Cài đặt bảng giá</h2>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Vé tháng -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Vé Tháng</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for vehicle_type, vehicle_name in vehicle_types %}
+                        <div class="mb-3">
+                            <label for="price_{{ vehicle_type }}_monthly" class="form-label">
+                                {% if vehicle_type == 'car' %}
+                                    <i class="fas fa-car text-primary"></i>
+                                {% elif vehicle_type == 'motorcycle' %}
+                                    <i class="fas fa-motorcycle text-warning"></i>
+                                {% elif vehicle_type == 'bicycle' %}
+                                    <i class="fas fa-bicycle text-success"></i>
+                                {% endif %}
+                                {{ vehicle_name }}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="price_{{ vehicle_type }}_monthly"
+                                       name="price_{{ vehicle_type }}_monthly"
+                                       value="{{ pricing_data|lookup:vehicle_type|lookup:'monthly'|floatformat:0 }}"
+                                       min="0" 
+                                       step="1000">
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vé theo lượt -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-clock"></i> Vé Theo Lượt</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for vehicle_type, vehicle_name in vehicle_types %}
+                        <div class="mb-3">
+                            <label for="price_{{ vehicle_type }}_hourly" class="form-label">
+                                {% if vehicle_type == 'car' %}
+                                    <i class="fas fa-car text-primary"></i>
+                                {% elif vehicle_type == 'motorcycle' %}
+                                    <i class="fas fa-motorcycle text-warning"></i>
+                                {% elif vehicle_type == 'bicycle' %}
+                                    <i class="fas fa-bicycle text-success"></i>
+                                {% endif %}
+                                {{ vehicle_name }}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" 
+                                       class="form-control" 
+                                       id="price_{{ vehicle_type }}_hourly"
+                                       name="price_{{ vehicle_type }}_hourly"
+                                       value="{{ pricing_data|lookup:vehicle_type|lookup:'hourly'|floatformat:0 }}"
+                                       min="0" 
+                                       step="1000">
+                                <span class="input-group-text">VNĐ</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">Cập nhật bảng giá</h6>
+                                <small class="text-muted">Thay đổi sẽ có hiệu lực ngay lập tức</small>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Lưu ý:</strong> 
+                <ul class="mb-0 mt-2">
+                    <li>Giá vé tháng áp dụng cho cả tháng</li>
+                    <li>Giá vé theo lượt tính theo lượt ra/vào</li>
+                    <li>Nhập 0 để miễn phí</li>
+                    <li>Thay đổi giá sẽ ảnh hưởng đến tất cả giao dịch mới</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Custom filter để lookup nested dict
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto format number inputs
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            // Format number with thousands separator
+            const value = this.value.replace(/,/g, '');
+            if (value) {
+                const formatted = parseInt(value).toLocaleString('vi-VN');
+                // Update display if needed
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

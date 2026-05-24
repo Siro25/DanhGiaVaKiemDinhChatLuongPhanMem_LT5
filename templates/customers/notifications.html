@@ -1,0 +1,178 @@
+{% extends 'customers/customer_base.html' %}
+{% block title %}Thông báo - Khách hàng{% endblock %}
+
+{% block extra_css %}
+<style>
+.notifications-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h2 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    color: #6c757d;
+}
+
+.notification-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+    border-left: 4px solid #28a745;
+}
+
+.notification-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.notification-card.unread {
+    background: #f8fff9;
+    border-left-color: #ff8a00;
+}
+
+.notification-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.notification-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-title i {
+    color: #28a745;
+    font-size: 24px;
+}
+
+.notification-date {
+    font-size: 13px;
+    color: #6c757d;
+}
+
+.notification-message {
+    color: #495057;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-mark-read {
+    padding: 6px 16px;
+    font-size: 14px;
+    border-radius: 6px;
+}
+
+.unread-badge {
+    background: #ff8a00;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #dee2e6;
+    margin-bottom: 20px;
+}
+
+.empty-state h4 {
+    color: #6c757d;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #adb5bd;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <div class="page-header">
+        <h2>
+            <i class="bi bi-bell"></i> Thông báo
+        </h2>
+        <p class="text-muted">Quản lý và xem tất cả thông báo của bạn</p>
+    </div>
+
+    {% if all_notifications %}
+        {% for notification in all_notifications %}
+        <div class="notification-card {% if not notification.read %}unread{% endif %}">
+            <div class="notification-header">
+                <h5 class="notification-title">
+                    <i class="bi bi-check-circle-fill"></i>
+                    {{ notification.title }}
+                </h5>
+                {% if not notification.read %}
+                <span class="unread-badge">Mới</span>
+                {% endif %}
+            </div>
+            
+            <p class="notification-message">{{ notification.message }}</p>
+            
+            <div class="notification-actions">
+                <small class="notification-date">
+                    <i class="bi bi-clock"></i> {{ notification.created_at|date:"d/m/Y H:i" }}
+                </small>
+                
+                {% if not notification.read %}
+                <a href="{% url 'customers:mark_notification_read' notification.pk %}?next={{ request.path }}" 
+                   class="btn btn-sm btn-outline-success btn-mark-read">
+                    <i class="bi bi-check2"></i> Đánh dấu đã đọc
+                </a>
+                {% else %}
+                <span class="badge bg-secondary">Đã đọc</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if all_notifications|length > 5 %}
+        <div class="text-center mt-4">
+            <p class="text-muted">Hiển thị {{ all_notifications|length }} thông báo</p>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <i class="bi bi-bell-slash"></i>
+            <h4>Chưa có thông báo nào</h4>
+            <p>Bạn sẽ nhận được thông báo khi có cập nhật về xe hoặc giao dịch của bạn.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

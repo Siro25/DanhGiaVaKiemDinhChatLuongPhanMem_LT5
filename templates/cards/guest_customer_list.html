@@ -1,0 +1,144 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block dashboard_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">{{ page_title }}</h2>
+        <div>
+            <a href="{% url 'cards:guest_checkin' %}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Thêm tin (Check-in)
+            </a>
+        </div>
+    </div>
+
+    <!-- Tìm kiếm -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="get" class="d-flex">
+                <input type="text" name="q" value="{{ q }}" class="form-control me-2" 
+                       placeholder="Tìm khách hàng, số điện thoại, biển số...">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-search"></i> Tìm
+                </button>
+            </form>
+        </div>
+        <div class="col-md-6 text-end">
+            <span class="text-muted">Tổng: {{ page_obj.paginator.count }} khách vãng lai</span>
+        </div>
+    </div>
+
+    <!-- Danh sách khách vãng lai -->
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Danh sách khách vãng lai</h5>
+        </div>
+        <div class="card-body">
+            {% if customers %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên khách hàng</th>
+                            <th>Số điện thoại</th>
+                            <th>Xe gần nhất</th>
+                            <th>Loại xe</th>
+                            <th>Ngày đăng ký</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                            <td>
+                                <strong>{{ customer.name }}</strong>
+                                <br>
+                                <small class="text-muted">{{ customer.customer_type }}</small>
+                            </td>
+                            <td>{{ customer.phone }}</td>
+                            <td>
+                                {% if customer.latest_vehicle_plate %}
+                                    <span class="badge bg-secondary">{{ customer.latest_vehicle_plate }}</span>
+                                {% else %}
+                                    <span class="text-muted">Chưa có xe</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if customer.latest_vehicle_type_display %}
+                                    {{ customer.latest_vehicle_type_display }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ customer.created_at|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <a href="{% url 'cards:guest_customer_vehicles' customer.id %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-car-front"></i> Xem xe
+                                </a>
+                                <a href="#" class="btn btn-sm btn-outline-info" 
+                                   title="Liên kết với User module">
+                                    <i class="bi bi-person-gear"></i> User
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Phân trang -->
+            {% if page_obj.has_other_pages %}
+            <nav aria-label="Phân trang">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if q %}&q={{ q }}{% endif %}">Đầu</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}">Trước</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}">Tiếp</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}">Cuối</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-person-x text-muted" style="font-size: 3rem;"></i>
+                <h4 class="text-muted mt-3">Không có khách vãng lai nào</h4>
+                {% if q %}
+                <p>Không tìm thấy kết quả cho "<strong>{{ q }}</strong>"</p>
+                <a href="{% url 'cards:guest_customer_list' %}" class="btn btn-outline-primary">
+                    Xem tất cả
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Thông tin liên kết -->
+    <div class="alert alert-info mt-4">
+        <h5><i class="bi bi-info-circle"></i> Thông tin</h5>
+        <p class="mb-0">
+            Đây là danh sách khách vãng lai sẽ liên kết với phần <strong>User module</strong> 
+            do thành viên khác phát triển. Các chức năng user sẽ được tích hợp sau.
+        </p>
+    </div>
+</div>
+{% endblock %}

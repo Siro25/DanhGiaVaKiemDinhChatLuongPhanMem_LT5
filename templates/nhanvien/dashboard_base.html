@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Nhân viên{% endblock %}
+
+{% block extra_css %}
+    <!-- Montserrat Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    
+    <style>
+        .messages-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1060;
+            min-width: 300px;
+            max-width: 500px;
+        }
+        
+        .messages-container .alert {
+            margin-bottom: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: none;
+            border-radius: 8px;
+        }
+        
+        .alert-success {
+            background-color: #d1edff;
+            border-left: 4px solid #0d6efd;
+            color: #0d6efd;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #dc3545;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            color: #856404;
+        }
+        
+        .alert-info {
+            background-color: #cff4fc;
+            border-left: 4px solid #17a2b8;
+            color: #17a2b8;
+        }
+    </style>
+{% endblock %}
+
+{% block auth_content %}
+    <div class="grid-container">
+
+        <!-- Header -->
+        <header class="header">
+            <div class="menu-icon" onclick="openSidebar()">
+                <span class="material-icons-outlined">menu</span>
+            </div>
+            <div class="header-left">
+                <span class="material-icons-outlined">search</span>
+            </div>
+            <div class="header-right">
+                <span class="material-icons-outlined">notifications</span>
+                <span class="material-icons-outlined">email</span>
+                <span class="material-icons-outlined">account_circle</span>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-title">
+                <div class="sidebar-brand">
+                    <span class="material-icons-outlined">inventory</span> Quản Lý Bãi Đỗ Xe
+                </div>
+                <span class="material-icons-outlined" onclick="closeSidebar()">close</span>
+            </div>
+            <hr>
+            <ul class="sidebar-list">
+                <li class="sidebar-list-item">
+                    <a href="{% url 'dashboard-nhanvien' %}">
+                        <span class="material-icons-outlined">dashboard</span> Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-list-item">
+                    <a href="{% url 'customers:customer_list' %}">
+                        <span class="material-icons-outlined">person_search</span> Khách gửi tháng
+                    </a>
+                </li>
+                <li class="sidebar-list-item">
+                    <a class="nav-link" href="{% url 'vehicles:vehicle_list' %}">
+                        <span class="material-icons-outlined">directions_car</span> Xe gửi tháng
+                    </a>
+                </li>
+                <li class="sidebar-list-item">
+                    <a href="{% url 'cards:payment_list' %}">
+                        <span class="material-icons-outlined">attach_money</span> Thu phí vãng lai
+                    </a>
+                </li>
+                <li class="sidebar-list-item">
+                    <a href="{% url 'cards:guest_customer_list' %}">
+                        <span class="material-icons-outlined">group</span> Khách vãng lai
+                    </a>
+                </li>
+                <li class="sidebar-list-item">
+                    <a href="{% url 'parking:pricing_list' %}">
+                        <span class="material-icons-outlined">price_check</span> Bảng giá
+                    </a>
+                </li>
+                <li class="sidebar-list-item">
+                    <a href="{% url 'nhanvien_settings' %}">
+                        <span class="material-icons-outlined">settings</span> Cài đặt
+                    </a>
+                </li>
+            </ul>
+            <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="logout-btn" style="background:none;border:none;padding:0;color:inherit;cursor:pointer;">
+                    Đăng xuất
+                </button>
+            </form>
+        </aside>
+
+        <!-- Main - Nội dung sẽ thay đổi ở đây -->
+        <main class="main-container">
+            <!-- Hiển thị thông báo -->
+            {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show auto-dismiss" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            {% block dashboard_content %}
+            <!-- Nội dung của từng trang con -->
+            {% endblock %}
+        </main>
+
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- ApexCharts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.35.3/apexcharts.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/scripts.js' %}"></script>
+    
+    <script>
+        // Tự động ẩn thông báo sau 3 giây
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.auto-dismiss').fadeOut('slow', function() {
+                    $(this).remove();
+                });
+            }, 3000); // 3 giây
+        });
+    </script>
+{% endblock %}

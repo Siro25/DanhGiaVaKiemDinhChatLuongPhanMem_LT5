@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng nhập Admin - Hệ thống Quản lý Bãi Đỗ Xe{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: #1a1a24; }
+    .auth-container { max-width: 720px; margin: 60px auto; }
+    .auth-card { background: #2d2d3a; border-radius: 8px; padding: 32px 36px; color: #fff; }
+    .auth-title { text-align: center; font-size: 32px; font-weight: 700; color: #4287f5; margin-bottom: 24px; }
+    .auth-input { background: #222230; border: 1px solid #4a4a58; color: #fff; height: 46px; }
+    .auth-input:focus { background: #222230; color: #fff; border-color: #4287f5; box-shadow: none; }
+    .auth-btn { background: #4287f5; border: none; height: 44px; font-weight: 600; }
+    .auth-logo { text-align: center; margin-bottom: 20px; }
+    .auth-logo img { max-width: 120px; }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <i class="fas fa-user-shield fa-4x" style="color: #4287f5;"></i>
+        </div>
+        <div class="auth-title">Đăng nhập Quản trị viên</div>
+        <form method="post" action="{% url 'admin_login' %}">
+            {% csrf_token %}
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+            <div class="mb-3">
+                <label for="username" class="form-label">Tên đăng nhập</label>
+                <input type="text" class="form-control auth-input" id="username" name="username" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Mật khẩu</label>
+                <input type="password" class="form-control auth-input" id="password" name="password" required>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn auth-btn">Đăng nhập</button>
+            </div>
+            <div class="text-center mt-3">
+                <a href="{% url 'login' %}" class="text-light">Đăng nhập dành cho nhân viên và khách hàng</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

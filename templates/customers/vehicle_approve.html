@@ -1,0 +1,105 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block title %}Duyệt đăng ký xe{% endblock %}
+
+{% block dashboard_content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-check-circle"></i> Duyệt đăng ký xe
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Thông tin xe cần duyệt:</strong>
+                    </div>
+
+                    <!-- Thông tin xe -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Biển số xe:</strong>
+                            <p class="text-primary fs-4">{{ vehicle.plate_number }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Loại xe:</strong>
+                            <p>{{ vehicle.get_vehicle_type_display }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Chủ xe:</strong>
+                            <p>{{ vehicle.customer.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Số điện thoại:</strong>
+                            <p>{{ vehicle.customer.phone }}</p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Loại khách:</strong>
+                            <p>
+                                {% if vehicle.customer.customer_type == 'Khách gửi tháng' %}
+                                    <span class="badge bg-warning">Khách gửi tháng</span>
+                                {% else %}
+                                    <span class="badge bg-info">Khách vãng lai</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Màu xe:</strong>
+                            <p>{{ vehicle.color|default:"Chưa có" }}</p>
+                        </div>
+                    </div>
+
+                    {% if vehicle.image %}
+                    <div class="mb-3">
+                        <strong>Hình ảnh xe:</strong>
+                        <div class="mt-2">
+                            <img src="{{ vehicle.image.url }}" alt="Xe {{ vehicle.plate_number }}" 
+                                 class="img-fluid rounded" style="max-height: 300px;">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+
+                    <!-- Form duyệt -->
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-geo-alt"></i> Gán vị trí đỗ xe (tùy chọn)
+                            </label>
+                            <input type="text" name="parking_slot" class="form-control" 
+                                   value="{{ vehicle.parking_slot|default:'' }}"
+                                   placeholder="VD: A01, B15, C23...">
+                            <small class="text-muted">Bạn có thể gán vị trí đỗ xe cho khách hàng</small>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Lưu ý:</strong> Sau khi duyệt, xe sẽ được phép vào bãi đỗ.
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'customers:vehicles' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Quay lại
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Duyệt xe
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

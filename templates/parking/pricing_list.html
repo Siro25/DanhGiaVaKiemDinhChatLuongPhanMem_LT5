@@ -1,0 +1,116 @@
+{% extends 'nhanvien/dashboard_base.html' %}
+
+{% block dashboard_content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-money-bill-wave"></i> Bảng Giá Dịch Vụ</h2>
+    
+    <div class="row">
+        <!-- Vé tháng -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Vé Tháng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Loại xe</th>
+                                    <th>Giá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for price in monthly_prices %}
+                                <tr>
+                                    <td>
+                                        {% if price.vehicle_type == 'car' %}
+                                            <i class="fas fa-car text-primary"></i> {{ price.get_vehicle_type_display }}
+                                        {% elif price.vehicle_type == 'motorcycle' %}
+                                            <i class="fas fa-motorcycle text-warning"></i> {{ price.get_vehicle_type_display }}
+                                        {% elif price.vehicle_type == 'bicycle' %}
+                                            <i class="fas fa-bicycle text-success"></i> {{ price.get_vehicle_type_display }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-success">
+                                            {% if price.price > 0 %}
+                                                {{ price.price|floatformat:0 }} VNĐ
+                                            {% else %}
+                                                <span class="badge bg-success">Miễn phí</span>
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">Chưa có dữ liệu giá</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vé theo lượt -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-clock"></i> Vé Theo Lượt</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Loại xe</th>
+                                    <th>Giá</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for price in hourly_prices %}
+                                <tr>
+                                    <td>
+                                        {% if price.vehicle_type == 'car' %}
+                                            <i class="fas fa-car text-primary"></i> {{ price.get_vehicle_type_display }}
+                                        {% elif price.vehicle_type == 'motorcycle' %}
+                                            <i class="fas fa-motorcycle text-warning"></i> {{ price.get_vehicle_type_display }}
+                                        {% elif price.vehicle_type == 'bicycle' %}
+                                            <i class="fas fa-bicycle text-success"></i> {{ price.get_vehicle_type_display }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-info">
+                                            {% if price.price > 0 %}
+                                                {{ price.price|floatformat:0 }} VNĐ
+                                            {% else %}
+                                                <span class="badge bg-success">Miễn phí</span>
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted">Chưa có dữ liệu giá</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>Lưu ý:</strong> Bảng giá này do quản trị viên thiết lập. Nếu cần thay đổi, vui lòng liên hệ quản trị viên.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
