@@ -65,7 +65,7 @@ def create_transaction_on_vehicle_add(sender, instance, created, **kwargs):
         from parking.models import PricingSetting
         from decimal import Decimal
         
-        print(f"🚗 Signal triggered for vehicle {instance.id} - customer: {instance.customer.name}")
+        # print(f"Signal triggered for vehicle {instance.id} - customer: {instance.customer.name}")
         
         # Kiểm tra xem đã có transaction cho vehicle này chưa để tránh duplicate
         existing_transaction = PaymentTransaction.objects.filter(
@@ -74,10 +74,10 @@ def create_transaction_on_vehicle_add(sender, instance, created, **kwargs):
         ).first()
         
         if existing_transaction:
-            print(f"❌ Transaction đã tồn tại cho vehicle {instance.id}, bỏ qua. Transaction ID: {existing_transaction.id}")
+            # print(f"Transaction exists for vehicle {instance.id}, skip. Transaction ID: {existing_transaction.id}")
             return
         
-        print(f"✅ Tạo transaction mới cho vehicle {instance.id}")
+        # print(f"Create new transaction for vehicle {instance.id}")
         
         # Cập nhật status customer thành 'awaiting_approval'
         instance.customer.status = 'awaiting_approval'

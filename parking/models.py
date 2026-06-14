@@ -142,12 +142,14 @@ class ParkingRecord(models.Model):
         duration = self.exit_time - self.entry_time
         hours = duration.total_seconds() / 3600
         
+        from decimal import Decimal
+        
         # Tính phí theo biểu phí
         if self.parking_rate.rate_type == 'hourly':
-            return self.parking_rate.rate * hours
+            return self.parking_rate.rate * Decimal(str(hours))
         elif self.parking_rate.rate_type == 'daily':
             days = hours / 24
-            return self.parking_rate.rate * days
+            return self.parking_rate.rate * Decimal(str(days))
         else:
             return self.parking_rate.rate
 

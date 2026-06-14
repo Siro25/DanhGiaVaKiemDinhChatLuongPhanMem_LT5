@@ -732,8 +732,9 @@ def vehicle_toggle_parking(request, pk):
             hours = max(1, duration.total_seconds() / 3600)  # Tối thiểu 1 giờ
             
             # Lấy đơn giá theo loại xe
+            from decimal import Decimal
             hourly_rate = PricingSetting.get_price(vehicle.vehicle_type, 'hourly')
-            active_record.fee = int(hours * hourly_rate)
+            active_record.fee = int(Decimal(str(hours)) * hourly_rate)
             active_record.save()
             
             messages.success(request, f'Xe {vehicle.plate_number} đã ra bãi. Phí: {active_record.fee:,.0f} VNĐ ({hours:.1f} giờ x {hourly_rate:,.0f} VNĐ)')
