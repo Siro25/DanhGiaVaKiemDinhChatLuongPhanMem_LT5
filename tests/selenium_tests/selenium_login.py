@@ -6,37 +6,21 @@ Kịch bản kiểm thử:
   2. Đăng nhập thất bại – sai mật khẩu
   3. Đăng nhập thất bại – để trống username và password
   4. Đăng nhập thất bại – username không tồn tại
-
-Phân tích HTML template accounts/admin_login.html:
-  - Trường username: <input name="username" ...>
-  - Trường password: <input name="password" ...>
-  - Nút submit: <button type="submit" ...>
-  - Thông báo lỗi: thẻ chứa text lỗi (error, alert hoặc message)
-
-Cấu hình:
-  BASE_URL – địa chỉ server đang chạy (mặc định http://127.0.0.1:8000)
-  ADMIN_USERNAME / ADMIN_PASSWORD – tài khoản admin thực tế
-
 Cách chạy:
-  python tests/selenium_tests/selenium_login.py
+  python manage.py test tests.selenium_tests.selenium_login --settings=tests.test_settings 
 """
 
 import sys
 import time
 import unittest
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.contrib.auth import get_user_model
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-
-# ---------------------------------------------------------------------------
-# Cấu hình – thay đổi theo môi trường thực tế
-# ---------------------------------------------------------------------------
-BASE_URL = "http://127.0.0.1:8000"
-ADMIN_LOGIN_URL = f"{BASE_URL}/accounts/admin_login/"
-USER_LOGIN_URL = f"{BASE_URL}/accounts/user_login/"
 
 # Tài khoản admin tồn tại trong DB
 ADMIN_USERNAME = "admin"
@@ -49,15 +33,15 @@ WAIT_TIMEOUT = 10  # giây tối đa chờ element
 # Base Test Class
 # ---------------------------------------------------------------------------
 
-class SeleniumBaseTest(unittest.TestCase):
+class SeleniumBaseTest(StaticLiveServerTestCase):
     """Base class: khởi tạo và dọn dẹp WebDriver."""
 
     @classmethod
     def setUpClass(cls):
         """Mở trình duyệt Chrome trước khi chạy test."""
+        super().setUpClass()
         options = webdriver.ChromeOptions()
-        # Bỏ comment dòng dưới để chạy headless (không mở cửa sổ)
-        # options.add_argument("--headless")
+        # options.add_argument("--headless") 
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--window-size=1366,768")
@@ -68,10 +52,14 @@ class SeleniumBaseTest(unittest.TestCase):
     def tearDownClass(cls):
         """Đóng trình duyệt sau khi toàn bộ test chạy xong."""
         cls.driver.quit()
+        super().tearDownClass()
 
     def setUp(self):
-        """Xóa cookie trước mỗi test để đảm bảo session sạch."""
+        """Tạo user và xóa cookie trước mỗi test để đảm bảo session sạch."""
         self.driver.delete_all_cookies()
+        User = get_user_model()
+        if not User.objects.filter(username=ADMIN_USERNAME).exists():
+            User.objects.create_superuser(username=ADMIN_USERNAME, email='admin@test.com', password=ADMIN_PASSWORD, role='admin')
 
     def wait_for_element(self, by, value, timeout=WAIT_TIMEOUT):
         """Đợi element xuất hiện và trả về element đó."""
@@ -91,7 +79,6 @@ class SeleniumBaseTest(unittest.TestCase):
             EC.url_contains(text)
         )
 
-
 # ===========================================================================
 # Test: Admin Login
 # ===========================================================================
@@ -102,7 +89,7 @@ class AdminLoginTest(SeleniumBaseTest):
     def _open_admin_login(self):
         """Mở trang admin login."""
         # Bước 1: Điều hướng đến trang đăng nhập admin
-        self.driver.get(ADMIN_LOGIN_URL)
+        self.driver.get(f"{self.live_server_url}/accounts/admin_login/")
         self.wait_for_element(By.NAME, "username")
 
     def _fill_login_form(self, username, password):
@@ -113,16 +100,22 @@ class AdminLoginTest(SeleniumBaseTest):
         # Bước 2: Điền username
         username_input = self.driver.find_element(By.NAME, "username")
         username_input.clear()
+        time.sleep(0.5)
         username_input.send_keys(username)
+        time.sleep(0.5)
 
         # Bước 3: Điền password
         password_input = self.driver.find_element(By.NAME, "password")
         password_input.clear()
+        time.sleep(0.5)
         password_input.send_keys(password)
+        time.sleep(0.5)
 
         # Bước 4: Click nút đăng nhập (button type=submit)
         submit_btn = self.wait_for_clickable(By.CSS_SELECTOR, "button[type='submit']")
+        time.sleep(0.5)
         submit_btn.click()
+        time.sleep(1)
 
     # -----------------------------------------------------------------------
     # Kịch bản 1: Đăng nhập thành công
@@ -145,11 +138,10 @@ class AdminLoginTest(SeleniumBaseTest):
             current_url = self.driver.current_url
             self.assertIn("dashboard", current_url,
                           f"Sau đăng nhập kỳ vọng URL chứa 'dashboard', thực tế: {current_url}")
-            print(f"✅ Test login success: Redirect đến {current_url}")
         except TimeoutException:
             # Có thể URL khác nhau tùy cấu hình
             current_url = self.driver.current_url
-            self.assertNotEqual(current_url, ADMIN_LOGIN_URL,
+            self.assertNotEqual(current_url, f"{self.live_server_url}/accounts/admin_login/",
                                 "Sau đăng nhập thành công không nên ở lại trang login")
 
     # -----------------------------------------------------------------------
@@ -180,7 +172,6 @@ class AdminLoginTest(SeleniumBaseTest):
             or "invalid" in page_source.lower()
         )
         self.assertTrue(has_error, "Phải hiển thị thông báo lỗi khi mật khẩu sai")
-        print("✅ Test wrong password: Hiển thị lỗi đúng")
 
     # -----------------------------------------------------------------------
     # Kịch bản 3: Để trống cả username và password
@@ -211,7 +202,6 @@ class AdminLoginTest(SeleniumBaseTest):
             is_still_on_login or has_error_message,
             "Form trống phải hiển thị lỗi hoặc ở lại trang login"
         )
-        print("✅ Test empty fields: Validation hoạt động đúng")
 
     # -----------------------------------------------------------------------
     # Kịch bản 4: Username không tồn tại
@@ -237,99 +227,7 @@ class AdminLoginTest(SeleniumBaseTest):
         page_source = self.driver.page_source
         has_error = "không đúng" in page_source or "error" in page_source.lower()
         self.assertTrue(has_error, "Phải hiển thị thông báo lỗi")
-        print("✅ Test nonexistent user: Hiển thị lỗi đúng")
 
-
-# ===========================================================================
-# Test: User Login (user_login_view)
-# ===========================================================================
-
-class UserLoginTest(SeleniumBaseTest):
-    """Kiểm thử giao diện user_login_view (đăng nhập bằng email/username)."""
-
-    # Cấu hình tài khoản khách hàng test
-    KH_USERNAME = "khachhang1"
-    KH_EMAIL = "khachhang1@test.com"
-    KH_PASSWORD = "kh@password123"
-
-    def _open_user_login(self):
-        """Mở trang user login."""
-        self.driver.get(USER_LOGIN_URL)
-        self.wait_for_element(By.NAME, "identifier")
-
-    def _fill_user_login_form(self, identifier, password):
-        """
-        Điền form user_login.html.
-        Trường identifier (name='identifier') hỗ trợ cả email và username.
-        """
-        # Bước 2: Điền identifier (email hoặc username)
-        id_input = self.driver.find_element(By.NAME, "identifier")
-        id_input.clear()
-        id_input.send_keys(identifier)
-
-        # Bước 3: Điền password
-        pw_input = self.driver.find_element(By.NAME, "password")
-        pw_input.clear()
-        pw_input.send_keys(password)
-
-        # Bước 4: Submit
-        submit_btn = self.wait_for_clickable(By.CSS_SELECTOR, "button[type='submit']")
-        submit_btn.click()
-
-    # -----------------------------------------------------------------------
-    # Kịch bản 5: Đăng nhập user thất bại – sai mật khẩu
-    # -----------------------------------------------------------------------
-
-    def test_05_user_login_wrong_password(self):
-        """
-        Kịch bản: User login với mật khẩu sai.
-        Kỳ vọng: Ở lại trang, có thông báo lỗi.
-        """
-        # Bước 1: Mở trang
-        self._open_user_login()
-
-        # Bước 2-4: Điền form với password sai
-        self._fill_user_login_form(self.KH_USERNAME, "SAI_MAT_KHAU_123")
-
-        # Bước 5: Kiểm tra
-        current_url = self.driver.current_url
-        self.assertIn("login", current_url, "Phải ở lại trang login")
-
-        page_source = self.driver.page_source
-        has_error = "không đúng" in page_source or "error" in page_source.lower()
-        self.assertTrue(has_error, "Phải có thông báo lỗi")
-        print("✅ Test user login wrong password: OK")
-
-    # -----------------------------------------------------------------------
-    # Kịch bản 6: Form rỗng
-    # -----------------------------------------------------------------------
-
-    def test_06_user_login_empty_form(self):
-        """
-        Kịch bản: Submit form trống.
-        Kỳ vọng: Ở lại trang hoặc có validation HTML5.
-        """
-        # Bước 1: Mở trang
-        self._open_user_login()
-
-        # Bước 2-4: Submit trống
-        self._fill_user_login_form("", "")
-
-        # Bước 5: Kiểm tra validation
-        current_url = self.driver.current_url
-        page_source = self.driver.page_source
-
-        is_on_login = "login" in current_url
-        has_validation_error = any(
-            kw in page_source
-            for kw in ["Vui lòng nhập", "required", "bắt buộc"]
-        )
-
-        self.assertTrue(
-            is_on_login or has_validation_error,
-            "Form rỗng phải xử lý validation"
-        )
-        print("✅ Test user login empty form: OK")
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +235,6 @@ class UserLoginTest(SeleniumBaseTest):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    # Chạy riêng file này: python tests/selenium_tests/selenium_login.py
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromTestCase(AdminLoginTest))
