@@ -3,9 +3,9 @@ Selenium WebDriver test cho chức năng đăng nhập (Login).
 
 Kịch bản kiểm thử:
   1. Đăng nhập thành công bằng admin_login_view (/accounts/admin_login/)
-  2. Đăng nhập thất bại – sai mật khẩu
-  3. Đăng nhập thất bại – để trống username và password
-  4. Đăng nhập thất bại – username không tồn tại
+  2. Đăng nhập thất bại  sai mật khẩu
+  3. Đăng nhập thất bại  để trống username và password
+  4. Đăng nhập thất bại  username không tồn tại
 Cách chạy:
   python manage.py test tests.selenium_tests.selenium_login --settings=tests.test_settings 
 """

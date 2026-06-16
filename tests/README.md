@@ -1,19 +1,5 @@
 # Hệ thống kiểm thử – Parking Management System
 
-## Mục đích kiểm thử
-
-Bộ kiểm thử này được tạo ra sau khi **phân tích toàn bộ source code** của hệ thống Django Parking Management, bao gồm:
-
-| App | Đã phân tích |
-|-----|-------------|
-| `accounts/` | models.py, forms.py, views.py, urls.py |
-| `customers/` | models.py, forms.py, views.py, urls.py |
-| `vehicles/` | models.py, forms.py, views.py, urls.py |
-| `parking/` | models.py, views.py, urls.py |
-| `pricing/` | models.py |
-| `cards/` | models.py |
-| `finance/` | models.py |
-
 ---
 
 ## Cấu trúc thư mục
@@ -34,8 +20,7 @@ tests/
 │   ├── selenium_customer.py # Kiểm thử quản lý khách hàng
 │   ├── selenium_vehicle.py  # Kiểm thử quản lý phương tiện
 │   ├── selenium_checkin_checkout.py  # Kiểm thử check-in/out
-│   └── selenium_pricing.py  # Kiểm thử bảng giá
-│
+│   
 └── README.md
 ```
 
@@ -54,10 +39,16 @@ tests/
 ### Chi tiết từng file test
 
 #### `test_login.py`
-Kiểm thử 3 view đăng nhập:
+**Mô tả**: Kiểm thử 3 view đăng nhập với tất cả comment bằng tiếng Việt
 - `login_view` – đăng nhập bằng email
-- `admin_login_view` – đăng nhập admin bằng username
+- `admin_login_view` – đăng nhập admin bằng username  
 - `user_login_view` – đăng nhập bằng email hoặc username
+
+**Các test case chính**:
+- ✅ Đăng nhập thành công cho admin/nhân viên/khách hàng
+- ✅ Xử lý sai mật khẩu và email không tồn tại
+- ✅ Kiểm tra trạng thái nhân viên (pending/rejected)
+- ✅ Validation form và safe redirect
 
 | Test Case | Branch được cover |
 |-----------|-----------------|
@@ -72,7 +63,15 @@ Kiểm thử 3 view đăng nhập:
 | Safe next redirect | url_has_allowed_host = True/False |
 
 #### `test_customer.py`
-Kiểm thử model và các view CRUD khách hàng:
+**Mô tả**: Kiểm thử model và CRUD khách hàng với comment tiếng Việt
+- Model Customer: validation, defaults, `__str__` method
+- Views: thêm, sửa, xóa, danh sách khách hàng
+
+**Các test case chính**:
+- ✅ Tạo khách hàng vãng lai và gửi tháng
+- ✅ Validation form và xử lý lỗi
+- ✅ Tìm kiếm và lọc theo loại khách hàng
+- ✅ Ràng buộc xóa khách hàng có xe liên kết
 
 | Test Case | Branch được cover |
 |-----------|-----------------|
@@ -90,7 +89,15 @@ Kiểm thử model và các view CRUD khách hàng:
 | Lọc theo loại khách | customer_type_filter |
 
 #### `test_vehicle.py`
-Kiểm thử model và các view quản lý phương tiện:
+**Mô tả**: Kiểm thử model và quản lý phương tiện với comment tiếng Việt
+- Model Vehicle: unique constraints, status updates
+- Views: CRUD operations và checkout bởi nhân viên
+
+**Các test case chính**:
+- ✅ Tạo phương tiện với validation biển số unique
+- ✅ Thêm/sửa/xóa xe với form validation
+- ✅ Checkout xe bởi nhân viên (in → out)
+- ✅ Lọc và tìm kiếm theo các tiêu chí
 
 | Test Case | Branch được cover |
 |-----------|-----------------|
@@ -106,7 +113,16 @@ Kiểm thử model và các view quản lý phương tiện:
 | Lọc theo khách tháng/vãng lai/tất cả | customer_type_filter |
 
 #### `test_parking.py`
-Kiểm thử check-in/out và các model liên quan:
+**Mô tả**: Kiểm thử check-in/out và models liên quan với comment tiếng Việt
+- ParkingRecord: tính phí, fee calculation
+- PricingSetting: get_price và fallback defaults
+- Vehicle toggle parking: check-in/out bởi khách hàng
+
+**Các test case chính**:
+- ✅ Check-in xe vào bãi lần đầu
+- ✅ Check-out xe có gói tháng (miễn phí)
+- ✅ Check-out xe vãng lai (tính phí theo giờ)
+- ✅ Kiểm tra xe chưa duyệt và quyền sở hữu
 
 | Test Case | Branch được cover |
 |-----------|-----------------|
@@ -124,7 +140,15 @@ Kiểm thử check-in/out và các model liên quan:
 | Xe của người khác bị chặn | vehicle.customer != owner_obj |
 
 #### `test_pricing.py`
-Kiểm thử hai model pricing:
+**Mô tả**: Kiểm thử hệ thống bảng giá với comment tiếng Việt
+- PricingSetting và PricingService models
+- Admin pricing management views
+
+**Các test case chính**:
+- ✅ Tạo và cập nhật bảng giá
+- ✅ Tính phí và fallback giá mặc định
+- ✅ Validation giá và kiểm soát quyền truy cập admin
+- ✅ Format giá theo định dạng tiền tệ
 
 | Test Case | Branch được cover |
 |-----------|-----------------|
@@ -179,6 +203,8 @@ python -m coverage html  # Tạo báo cáo HTML
 ---
 
 ## PHẦN 2: Selenium Testing
+
+**Lưu ý**: Các file Selenium vẫn giữ comment bằng tiếng Anh để tương thích với chuẩn quốc tế của Selenium WebDriver.
 
 ### Yêu cầu cài đặt
 
@@ -258,14 +284,15 @@ Trước khi chạy Selenium tests, cần:
 | Không phải admin → bị chặn | Redirect về login |
 
 ### Cách chạy Selenium Tests
+Chạy server: python manage.py runserver
 
 ```bash
 # Chạy từng file riêng lẻ
-python tests/selenium_tests/selenium_login.py
-python tests/selenium_tests/selenium_customer.py
-python tests/selenium_tests/selenium_vehicle.py
-python tests/selenium_tests/selenium_checkin_checkout.py
-python tests/selenium_tests/selenium_pricing.py
+python manage.py test tests.selenium_tests.selenium_login --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_customer --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_vehicle --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_checkin_checkout --settings=tests.test_settings 
+
 ```
 
 ---
@@ -296,9 +323,7 @@ python tests/selenium_tests/selenium_pricing.py
 | Check-out vãng lai | ✅ 1 test | - | Đầy đủ |
 | Pricing Views | ✅ 8 tests | ✅ 5 tests | Đầy đủ |
 
----
-
-## PHẦN 4: Chức năng không thể test
+## PHẦN 5: Chức năng không thể test
 
 Một số chức năng không thể test tự động do thiếu dữ liệu hoặc giao diện:
 

@@ -143,7 +143,7 @@ class SeleniumBaseTest(StaticLiveServerTestCase):
         # Submit
         submit_btn = self.driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
         submit_btn.click()
-        time.sleep(3)
+        time.sleep(1)
         
         # Kiểm tra đăng nhập thành công
         current_url = self.driver.current_url
@@ -192,7 +192,7 @@ class CustomerVehicleCheckInOutTest(SeleniumBaseTest):
         try:
             self.wait_for_element(By.TAG_NAME, "body")
             page_title = self.driver.title
-            print(f"[VEHICLES] ✅ Đã vào trang xe: {page_title}")
+            print(f"[VEHICLES] Đã vào trang xe: {page_title}")
                 
         except TimeoutException:
             print("[ERROR] Trang xe không tải được")
@@ -222,7 +222,7 @@ class CustomerVehicleCheckInOutTest(SeleniumBaseTest):
                             text = element.text.strip().lower()
                             if "vào bãi" in text or "check-in" in text:
                                 checkin_button = element
-                                print(f"[CHECKIN] ✅ Tìm thấy nút vào bãi: '{element.text}'")
+                                print(f"[CHECKIN] Tìm thấy nút vào bãi: '{element.text}'")
                                 break
                     if checkin_button:
                         break
@@ -245,7 +245,7 @@ class CustomerVehicleCheckInOutTest(SeleniumBaseTest):
                     
                     if "toggle-parking" in href:
                         checkin_button = link
-                        print(f"[CHECKIN] ✅ Tìm thấy toggle-parking link: '{link.text}'")
+                        print(f"[CHECKIN] Tìm thấy toggle-parking link: '{link.text}'")
                         break
             
             if checkin_button:
@@ -262,28 +262,22 @@ class CustomerVehicleCheckInOutTest(SeleniumBaseTest):
                 except TimeoutException:
                     print("[CHECKIN] Không có alert")
                 
-                time.sleep(3)
+                time.sleep(1)
                 
                 # Kiểm tra đã vào bãi thành công
                 current_url = self.driver.current_url
                 print(f"[CHECKIN] URL sau khi vào bãi: {current_url}")
                 
                 if "vehicles" in current_url:
-                    print("[CHECKIN] ✅ Đã vào bãi thành công")
+                    print("[CHECKIN] Đã vào bãi thành công")
                 else:
                     print(f"[CHECKIN] URL không như mong đợi: {current_url}")
-                    
-                # Bước 4: Chờ 3 giây như yêu cầu
-                print("[WAIT] Chờ 3 giây...")
-                time.sleep(3)
-                print("[WAIT] ✅ Đã chờ 3 giây")
-                
-                # Bước 5: Tìm và click nút "Ra bãi"
-                print("[CHECKOUT] Tìm nút ra bãi")
-                
+                  
+                time.sleep(1)
+          
                 # Refresh trang để cập nhật trạng thái
                 self.driver.refresh()
-                time.sleep(2)
+                time.sleep(1)
                 
                 checkout_button = None
                 try:
@@ -305,7 +299,7 @@ class CustomerVehicleCheckInOutTest(SeleniumBaseTest):
                                     if ("ra bãi" in text or "check-out" in text or 
                                         "toggle-parking" in href):
                                         checkout_button = element
-                                        print(f"[CHECKOUT] ✅ Tìm thấy nút ra bãi: '{element.text}'")
+                                        print(f"[CHECKOUT] Tìm thấy nút ra bãi: '{element.text}'")
                                         break
                             if checkout_button:
                                 break
@@ -330,21 +324,21 @@ class CustomerVehicleCheckInOutTest(SeleniumBaseTest):
                         
                         # Kiểm tra đã ra bãi thành công
                         final_url = self.driver.current_url
-                        print(f"[CHECKOUT] ✅ Đã ra bãi thành công: {final_url}")
+                        print(f"[CHECKOUT]Đã ra bãi thành công: {final_url}")
                         
-                        print("[FINAL] 🎉 TEST HOÀN THÀNH - VÀO BÃI → CHỜ 3S → RA BÃI! 🎉")
+                        print("[FINAL]TEST HOÀN THÀNH - VÀO BÃI→ RA BÃI!")
                         
                     else:
-                        print("[CHECKOUT] ❌ Không tìm thấy nút ra bãi")
-                        print("[CHECKOUT] ✅ Nhưng đã hoàn thành phần vào bãi và chờ 3s")
+                        print("[CHECKOUT] Không tìm thấy nút ra bãi")
+                        print("[CHECKOUT] Nhưng đã hoàn thành phần vào bãi và chờ 3s")
                         
                 except Exception as e:
                     print(f"[CHECKOUT] Lỗi khi tìm nút ra bãi: {e}")
-                    print("[CHECKOUT] ✅ Nhưng đã hoàn thành phần vào bãi và chờ 3s")
+                    print("[CHECKOUT] Nhưng đã hoàn thành phần vào bãi")
                     
             else:
-                print("[CHECKIN] ❌ Không tìm thấy nút vào bãi")
-                print("[CHECKIN] ✅ Đã truy cập thành công trang /customers/vehicles/")
+                print("[CHECKIN]Không tìm thấy nút vào bãi")
+                print("[CHECKIN]Đã truy cập thành công trang /customers/vehicles/")
                 
         except Exception as e:
             print(f"[CHECKIN] Lỗi trong quá trình test: {e}")

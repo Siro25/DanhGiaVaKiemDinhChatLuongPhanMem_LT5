@@ -1,20 +1,4 @@
-"""
-White-box unit tests cho chức năng Parking Check-in / Check-out.
-
-Dựa trên phân tích source code:
-  - parking/models.py  : ParkingRecord, ParkingLot, PricingSetting
-  - customers/views.py : vehicle_toggle_parking (check-in/out cho khách hàng)
-  - vehicles/views.py  : vehicle_checkout (check-out từ nhân viên)
-  - cards/models.py    : Card, PaymentTransaction
-
-Mục tiêu phủ:
-  Statement Coverage  – mọi câu lệnh được thực thi.
-  Branch Coverage     – mọi nhánh if/else được đi qua, bao gồm:
-    - Xe đang trong bãi vs chưa trong bãi
-    - Xe có gói tháng vs không có gói tháng
-    - Xe đã được duyệt vs chưa được duyệt
-  Condition Coverage  – mọi điều kiện Boolean thử cả True/False.
-"""
+"""White-box unit tests cho chức năng Parking Check-in/Check-out."""
 
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -30,70 +14,26 @@ from cards.models import Card
 from finance.models import ParkingRate
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def make_khachhang(username="kh_park", password="khpark!"):
-    return User.objects.create_user(
-        username=username, password=password,
-        email=f"{username}@test.com",
-        role="khachhang", status="approved",
-    )
-
+    return User.objects.create_user(username=username, password=password, email=f"{username}@test.com", role="khachhang", status="approved")
 
 def make_nhanvien(username="nv_park", password="nvpark!"):
-    return User.objects.create_user(
-        username=username, password=password,
-        email=f"{username}@test.com",
-        role="nhanvien", status="approved",
-    )
+    return User.objects.create_user(username=username, password=password, email=f"{username}@test.com", role="nhanvien", status="approved")
 
+def make_customer(user=None, name="KH Parking", phone="0911111111", customer_type="Khách vãng lai", status="approved"):
+    return Customer.objects.create(user=user, name=name, phone=phone, customer_type=customer_type, status=status)
 
-def make_customer(user=None, name="KH Parking", phone="0911111111",
-                  customer_type="Khách vãng lai", status="approved"):
-    return Customer.objects.create(
-        user=user, name=name, phone=phone,
-        customer_type=customer_type, status=status,
-    )
-
-
-def make_vehicle(plate="51A-PARK1", customer=None, status="in",
-                 vehicle_type="motorcycle", approved=True):
-    return Vehicle.objects.create(
-        plate_number=plate,
-        vehicle_type=vehicle_type,
-        customer=customer,
-        status=status,
-        approved=approved,
-    )
-
+def make_vehicle(plate="51A-PARK1", customer=None, status="in", vehicle_type="motorcycle", approved=True):
+    return Vehicle.objects.create(plate_number=plate, vehicle_type=vehicle_type, customer=customer, status=status, approved=approved)
 
 def make_parking_lot(name="Bãi Test", capacity=50):
-    return ParkingLot.objects.create(
-        name=name,
-        capacity=capacity,
-        available_slots=capacity,
-        status="active",
-        allowed_vehicle_types="all",
-        hourly_rate=10000,
-    )
-
+    return ParkingLot.objects.create(name=name, capacity=capacity, available_slots=capacity, status="active", allowed_vehicle_types="all", hourly_rate=10000)
 
 def make_card(customer, card_number="CARD-0001"):
-    return Card.objects.create(
-        card_number=card_number,
-        card_type="rfid",
-        customer=customer,
-        status="active",
-    )
-
+    return Card.objects.create(card_number=card_number, card_type="rfid", customer=customer, status="active")
 
 def make_parking_rate(vehicle_type="motorcycle", hourly_rate=5000):
-    return ParkingRate.objects.create(
-        vehicle_type=vehicle_type,
-        hourly_rate=Decimal(str(hourly_rate)),
-    )
+    return ParkingRate.objects.create(vehicle_type=vehicle_type, hourly_rate=Decimal(str(hourly_rate)))
 
 
 # ===========================================================================
@@ -465,6 +405,237 @@ class StaffVehicleCheckoutTests(TestCase):
 
     def test_checkout_vehicle_not_found(self):
         """Xe không tồn tại → 404."""
+        url = reverse("vehicles:vehicle_checkout", kwargs={"pk": 99999})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+
+class ParkingModelTests(TestCase):
+    """Test parking models: ParkingRecord, PricingSetting, ParkingLot."""
+    
+    def setUp(self):
+        customer = make_customer()
+        self.parking_lot = make_parking_lot()
+        self.vehicle = make_vehicle(customer=customer)
+        self.card = make_card(customer)
+        self.rate = make_parking_rate("motorcycle", 5000)
+    
+    def test_01_parking_record_creation_and_fee_calculation(self):
+        """Test tạo ParkingRecord và tính phí theo các điều kiện."""
+        # Basic parking record creation
+        record = ParkingRecord.objects.create(
+            vehicle=self.vehicle, card=self.card, parking_lot=self.parking_lot,
+            entry_time=timezone.now(), parking_rate=self.rate
+        )
+        self.assertIsNone(record.exit_time)
+        self.assertFalse(record.is_paid)
+        
+        # Fee calculation without exit_time returns None
+        self.assertIsNone(record.calculate_fee())
+        
+        # Fee calculation without parking_rate returns None
+        record_no_rate = ParkingRecord(
+            vehicle=self.vehicle, card=self.card, parking_lot=self.parking_lot,
+            entry_time=timezone.now() - timedelta(hours=1), exit_time=timezone.now(), parking_rate=None
+        )
+        self.assertIsNone(record_no_rate.calculate_fee())
+        
+        # Fee calculation with hourly rate
+        self.rate.rate_type = "hourly"
+        self.rate.rate = Decimal("5000")
+        entry = timezone.now() - timedelta(hours=2)
+        exit_ = timezone.now()
+        record_with_fee = ParkingRecord(
+            vehicle=self.vehicle, card=self.card, parking_lot=self.parking_lot,
+            entry_time=entry, exit_time=exit_, parking_rate=self.rate
+        )
+        fee = record_with_fee.calculate_fee()
+        if fee is not None:
+            self.assertGreater(fee, 0)
+    
+    def test_02_pricing_setting_get_price_and_defaults(self):
+        """Test PricingSetting.get_price() với active/inactive settings và defaults."""
+        # Active setting returns correct price
+        PricingSetting.objects.create(vehicle_type="motorcycle", package_type="hourly", price=5000, is_active=True)
+        price = PricingSetting.get_price("motorcycle", "hourly")
+        self.assertEqual(price, 5000)
+        
+        # Default prices when not found
+        self.assertEqual(PricingSetting.get_price("car", "monthly"), 800000)       # default
+        self.assertEqual(PricingSetting.get_price("bicycle", "hourly"), 0)         # default free
+        
+        # Inactive setting returns default
+        PricingSetting.objects.create(vehicle_type="car", package_type="hourly", price=99999, is_active=False)
+        self.assertEqual(PricingSetting.get_price("car", "hourly"), 30000)  # fallback default
+        
+        # Unknown type returns 0
+        self.assertEqual(PricingSetting.get_price("truck", "weekly"), 0)
+    
+    def test_03_parking_lot_occupancy_calculation(self):
+        """Test ParkingLot occupancy rate calculation."""
+        lot = make_parking_lot("Bãi Occupy Test", capacity=10)
+        customer = make_customer(name="KH Occupy", phone="0920000001", customer_type="Khách vãng lai")
+        vehicle = make_vehicle(plate="51A-OCCUPY1", customer=customer)
+        card = make_card(customer, "CARD-OCCUPY1")
+        rate = make_parking_rate()
+        
+        # Empty lot
+        self.assertEqual(lot.occupied_slots, 0)
+        
+        # Add active parking record
+        ParkingRecord.objects.create(vehicle=vehicle, card=card, parking_lot=lot, entry_time=timezone.now(), parking_rate=rate)
+        self.assertEqual(lot.occupied_slots, 1)
+        
+        # Test zero capacity doesn't cause division by zero
+        lot_zero = ParkingLot(capacity=0, available_slots=0)
+        self.assertEqual(lot_zero.get_occupancy_rate(), 0)
+
+
+class VehicleCheckinTests(TestCase):
+    """Test check-in thành công và các điều kiện chặn."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.kh_user = make_khachhang("kh_checkin", "checkin123!")
+        self.customer = make_customer(user=self.kh_user, name="KH CheckIn", phone="0912121212")
+        self.client.force_login(self.kh_user)
+    
+    def test_04_vehicle_checkin_success(self):
+        """Test check-in thành công tạo ParkingRecord."""
+        vehicle = Vehicle.objects.create(
+            plate_number="51A-CHECKIN", vehicle_type="motorcycle", customer=self.customer, approved=True
+        )
+        url = reverse("customers:vehicle_toggle_parking", kwargs={"pk": vehicle.pk})
+        
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify parking record created
+        record = ParkingRecord.objects.filter(vehicle=vehicle, exit_time__isnull=True).first()
+        self.assertIsNotNone(record)
+    
+    def test_05_unapproved_vehicle_blocked_from_checkin(self):
+        """Test xe chưa duyệt không được check-in."""
+        vehicle = Vehicle.objects.create(
+            plate_number="51A-UNAPPR", vehicle_type="motorcycle", customer=self.customer, approved=False
+        )
+        url = reverse("customers:vehicle_toggle_parking", kwargs={"pk": vehicle.pk})
+        
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        
+        # No parking record created for unapproved vehicle
+        self.assertFalse(ParkingRecord.objects.filter(vehicle=vehicle).exists())
+
+
+class VehicleCheckoutTests(TestCase):
+    """Test check-out với gói tháng và vãng lai."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.kh_user = make_khachhang("kh_checkout", "checkout123!")
+        self.customer = make_customer(user=self.kh_user, name="KH CheckOut", phone="0913131313")
+        self.client.force_login(self.kh_user)
+    
+    def test_06_checkout_monthly_subscription_free(self):
+        """Test checkout xe có gói tháng → miễn phí."""
+        vehicle = Vehicle.objects.create(
+            plate_number="51A-MONTHLY", vehicle_type="motorcycle", customer=self.customer, approved=True
+        )
+        
+        # Create active monthly subscription
+        MonthlySubscription.objects.create(
+            customer=self.customer, vehicle=vehicle,
+            start_date=date.today() - timedelta(days=5),
+            end_date=date.today() + timedelta(days=25),
+            is_active=True
+        )
+        
+        # Setup parking infrastructure
+        lot = make_parking_lot("Bãi Monthly")
+        card = make_card(self.customer, "CARD-MONTHLY")
+        rate = make_parking_rate()
+        
+        # Vehicle currently parked
+        ParkingRecord.objects.create(
+            vehicle=vehicle, card=card, parking_lot=lot,
+            entry_time=timezone.now() - timedelta(hours=2), parking_rate=rate
+        )
+        
+        url = reverse("customers:vehicle_toggle_parking", kwargs={"pk": vehicle.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify free checkout
+        record = ParkingRecord.objects.filter(vehicle=vehicle, exit_time__isnull=False).first()
+        self.assertIsNotNone(record)
+        self.assertEqual(record.fee, 0)
+        self.assertTrue(record.is_paid)
+    
+    def test_07_checkout_guest_vehicle_calculates_fee(self):
+        """Test checkout xe vãng lai → tính phí theo giờ."""
+        vehicle = Vehicle.objects.create(
+            plate_number="51A-GUEST", vehicle_type="motorcycle", customer=self.customer, approved=True
+        )
+        
+        # Setup pricing
+        PricingSetting.objects.create(vehicle_type="motorcycle", package_type="hourly", price=5000, is_active=True)
+        
+        lot = make_parking_lot("Bãi Guest")
+        card = make_card(self.customer, "CARD-GUEST")
+        rate = make_parking_rate()
+        
+        # Vehicle parked for 2 hours
+        ParkingRecord.objects.create(
+            vehicle=vehicle, card=card, parking_lot=lot,
+            entry_time=timezone.now() - timedelta(hours=2), parking_rate=rate
+        )
+        
+        url = reverse("customers:vehicle_toggle_parking", kwargs={"pk": vehicle.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify fee calculated (minimum 1 hour)
+        record = ParkingRecord.objects.filter(vehicle=vehicle, exit_time__isnull=False).first()
+        self.assertIsNotNone(record)
+        self.assertGreaterEqual(record.fee, 5000)
+
+
+class StaffVehicleCheckoutTests(TestCase):
+    """Test nhân viên checkout xe."""
+    
+    def setUp(self):
+        self.client = Client()
+        self.nv = make_nhanvien("nv_checkout", "nvcopass!")
+        self.client.force_login(self.nv)
+        self.customer = make_customer(name="KH Staff CO", phone="0914141414")
+    
+    def test_08_staff_checkout_vehicle_success(self):
+        """Test nhân viên checkout xe từ 'in' → 'out'."""
+        vehicle = make_vehicle("51A-STAFF1", customer=self.customer, status="in")
+        url = reverse("vehicles:vehicle_checkout", kwargs={"pk": vehicle.pk})
+        
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        
+        vehicle.refresh_from_db()
+        self.assertEqual(vehicle.status, "out")
+        self.assertIsNotNone(vehicle.check_out)
+    
+    def test_09_checkout_already_out_no_change(self):
+        """Test xe đã 'out' → không thay đổi."""
+        vehicle = make_vehicle("51A-STAFF2", customer=self.customer, status="out")
+        url = reverse("vehicles:vehicle_checkout", kwargs={"pk": vehicle.pk})
+        
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        
+        vehicle.refresh_from_db()
+        self.assertEqual(vehicle.status, "out")
+        self.assertIsNone(vehicle.check_out)  # not reset
+    
+    def test_10_checkout_nonexistent_vehicle_404(self):
+        """Test checkout xe không tồn tại → 404."""
         url = reverse("vehicles:vehicle_checkout", kwargs={"pk": 99999})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)

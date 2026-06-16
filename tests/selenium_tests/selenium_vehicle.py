@@ -150,14 +150,14 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
         try:
             self.wait_for_element(By.TAG_NAME, "body")
             page_title = self.driver.title
-            print(f"[ACCESS] ✅ Đã vào trang khách vãng lai: {page_title}")
+            print(f"[ACCESS]Đã vào trang khách vãng lai: {page_title}")
             
             # Kiểm tra có bảng khách vãng lai không
             page_source = self.driver.page_source
             if "khách vãng lai" in page_source.lower():
-                print("[ACCESS] ✅ Tìm thấy nội dung khách vãng lai")
+                print("[ACCESS]Tìm thấy nội dung khách vãng lai")
             else:
-                print("[ACCESS] ⚠️ Không thấy nội dung khách vãng lai")
+                print("[ACCESS] Không thấy nội dung khách vãng lai")
                 
         except TimeoutException:
             print("[ERROR] Trang khách vãng lai không tải được")
@@ -179,7 +179,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
         # Kiểm tra có form check-in không
         try:
             self.wait_for_element(By.TAG_NAME, "form", timeout=5)
-            print("[CHECKIN] ✅ Tìm thấy form check-in")
+            print("[CHECKIN]Tìm thấy form check-in")
             
             # Điền form check-in với đầy đủ thông tin
             self.fill_checkin_form()
@@ -202,16 +202,16 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
         time.sleep(3)  # Dừng 1 nhịp như yêu cầu
         
         final_url = self.driver.current_url
-        print(f"[FINAL] ✅ Đã về trang khách vãng lai: {final_url}")
+        print(f"[FINAL] Đã về trang khách vãng lai: {final_url}")
         
         # Kiểm tra có xe mới không (có thể có hoặc không vì demo)
         page_source = self.driver.page_source
         if "51A-12345" in page_source:
-            print("[FINAL] ✅ Xe vừa thêm đã xuất hiện trong danh sách khách vãng lai")
+            print("[FINAL] Xe vừa thêm đã xuất hiện trong danh sách khách vãng lai")
         else:
-            print("[FINAL] ✅ Hoàn thành quá trình check-in (xe demo đã được tạo trong database)")
+            print("[FINAL] Hoàn thành quá trình check-in (xe demo đã được tạo trong database)")
         
-        print("[FINAL] 🎉 TEST HOÀN THÀNH - DỪNG TẠI TRANG GUEST-CUSTOMERS! 🎉")
+        print("[FINAL] TEST HOÀN THÀNH - DỪNG TẠI TRANG GUEST-CUSTOMERS!")
         print("="*80)
         
         # Dừng thêm 3 giây để quan sát kết quả
@@ -259,7 +259,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
             if plate_input:
                 plate_input.clear()
                 plate_input.send_keys(vehicle_data["plate_number"])
-                print(f"[FORM] ✅ Đã điền biển số: {vehicle_data['plate_number']}")
+                print(f"[FORM] Đã điền biển số: {vehicle_data['plate_number']}")
             
             # Điền loại xe
             vehicle_type_selectors = ["vehicle_type", "loai_xe", "type"]
@@ -270,18 +270,18 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
                         select = Select(vehicle_type_element)
                         try:
                             select.select_by_value(vehicle_data["vehicle_type"])
-                            print(f"[FORM] ✅ Đã chọn loại xe: {vehicle_data['vehicle_type']}")
+                            print(f"[FORM] Đã chọn loại xe: {vehicle_data['vehicle_type']}")
                         except:
                             # Thử chọn theo text
                             for option in select.options:
                                 if "xe máy" in option.text.lower() or "motorcycle" in option.text.lower():
                                     select.select_by_visible_text(option.text)
-                                    print(f"[FORM] ✅ Đã chọn loại xe: {option.text}")
+                                    print(f"[FORM] Đã chọn loại xe: {option.text}")
                                     break
                     else:
                         vehicle_type_element.clear()
                         vehicle_type_element.send_keys("Xe máy")
-                        print("[FORM] ✅ Đã điền loại xe: Xe máy")
+                        print("[FORM] Đã điền loại xe: Xe máy")
                     break
                 except NoSuchElementException:
                     continue
@@ -293,7 +293,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
                     color_input = self.driver.find_element(By.NAME, selector)
                     color_input.clear()
                     color_input.send_keys(vehicle_data["color"])
-                    print(f"[FORM] ✅ Đã điền màu: {vehicle_data['color']}")
+                    print(f"[FORM] Đã điền màu: {vehicle_data['color']}")
                     break
                 except NoSuchElementException:
                     continue
@@ -305,7 +305,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
                     customer_name_input = self.driver.find_element(By.NAME, selector)
                     customer_name_input.clear()
                     customer_name_input.send_keys(vehicle_data["customer_name"])
-                    print(f"[FORM] ✅ Đã điền tên khách: {vehicle_data['customer_name']}")
+                    print(f"[FORM] Đã điền tên khách: {vehicle_data['customer_name']}")
                     break
                 except NoSuchElementException:
                     continue
@@ -317,7 +317,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
                     phone_input = self.driver.find_element(By.NAME, selector)
                     phone_input.clear()
                     phone_input.send_keys(vehicle_data["customer_phone"])
-                    print(f"[FORM] ✅ Đã điền SĐT: {vehicle_data['customer_phone']}")
+                    print(f"[FORM] Đã điền SĐT: {vehicle_data['customer_phone']}")
                     break
                 except NoSuchElementException:
                     continue
@@ -352,7 +352,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
                         # Tránh nút đăng xuất
                         if "đăng xuất" not in text and "logout" not in text and text:
                             submit_button = button
-                            print(f"[FORM] ✅ Tìm thấy nút submit an toàn: {button.text}")
+                            print(f"[FORM] Tìm thấy nút submit an toàn: {button.text}")
                             break
                     if submit_button:
                         break
@@ -370,9 +370,9 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
                 # Kiểm tra kết quả
                 current_url = self.driver.current_url
                 if "login" in current_url:
-                    print("[FORM] ⚠️ Bị đăng xuất sau submit, có thể click nhầm nút")
+                    print("[FORM] Bị đăng xuất sau submit, có thể click nhầm nút")
                 elif "guest-customers" in current_url:
-                    print("[FORM] ✅ Check-in thành công, đã về trang guest-customers")
+                    print("[FORM] Check-in thành công, đã về trang guest-customers")
                 else:
                     print(f"[FORM] Check-in xong, URL hiện tại: {current_url}")
             else:
@@ -428,7 +428,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
                 created_by=staff_user
             )
             
-            print(f"[DEMO] ✅ Tạo xe check-in thành công:")
+            print(f"[DEMO]    Tạo xe check-in thành công:")
             print(f"[DEMO]    - ID xe: {vehicle.id}")
             print(f"[DEMO]    - Biển số: {vehicle.plate_number}")
             print(f"[DEMO]    - Loại xe: {vehicle.get_vehicle_type_display()}")
@@ -439,7 +439,7 @@ class VehicleSeleniumTest(StaticLiveServerTestCase):
             print(f"[DEMO]    - Trạng thái: {vehicle.get_status_display()}")
             
         except Exception as e:
-            print(f"[DEMO] ❌ Lỗi khi tạo xe demo: {e}")
+            print(f"[DEMO] Lỗi khi tạo xe demo: {e}")
 
 
 if __name__ == "__main__":
