@@ -1,473 +1,368 @@
-# 🚗 Hệ Thống Quản Lý Bãi Đỗ Xe
+# Hệ thống kiểm thử – Parking Management System
 
-[![Django](https://img.shields.io/badge/Django-5.2.6-green.svg)](https://www.djangoproject.com/)
-[![Python](https://img.shields.io/badge/Python-3.x-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+---
 
-Hệ thống quản lý bãi đỗ xe thông minh được phát triển bằng Django Framework, hỗ trợ quản lý xe vãng lai và gói đăng ký tháng.
-
-## 📋 Mục Lục
-
-- [Tính Năng](#-tính-năng)
-- [Công Nghệ Sử Dụng](#-công-nghệ-sử-dụng)
-- [Cài Đặt](#-cài-đặt)
-- [Cấu Trúc Dự Án](#-cấu-trúc-dự-án)
-- [Sử Dụng](#-sử-dụng)
-- [Phân Quyền](#-phân-quyền)
-- [API Endpoints](#-api-endpoints)
-- [Đóng Góp](#-đóng-góp)
-- [Tác Giả](#-tác-giả)
-
-## ✨ Tính Năng
-
-### 🔐 Quản Lý Tài Khoản & Phân Quyền
-- **3 loại tài khoản:** Admin, Nhân viên, Khách hàng
-- Đăng ký, đăng nhập, đăng xuất
-- Quản lý hồ sơ cá nhân
-- Xác thực và phân quyền đa cấp
-
-### 🚙 Quản Lý Xe
-- Đăng ký xe với nhiều loại: Ô tô, Xe máy, Xe đạp, Xe tải, Taxi
-- Duyệt/từ chối xe bởi Admin/Nhân viên
-- Theo dõi trạng thái xe (đang trong bãi/đã ra)
-- Lịch sử ra/vào của từng xe
-- Hỗ trợ nhiều xe cho một khách hàng
-
-### 💳 Gói Đăng Ký Tháng
-- Đăng ký gói tháng cho **từng xe cụ thể**
-- Tính phí theo loại xe và thời hạn (1, 3, 6, 12 tháng)
-- Miễn phí ra/vào cho xe có gói tháng còn hiệu lực
-- Theo dõi ngày hết hạn và cảnh báo sắp hết hạn (≤ 7 ngày)
-- Gia hạn gói tháng tự động
-
-### 💰 Quản Lý Ví & Thanh Toán
-- Ví điện tử cho mỗi khách hàng
-- Nạp tiền vào ví
-- Thanh toán gói tháng từ ví
-- Lịch sử giao dịch chi tiết
-- Hiển thị số dư và biến động
-
-### 🅿️ Quản Lý Bãi Đỗ Xe
-- Quản lý nhiều bãi xe
-- Theo dõi sức chứa và số chỗ trống
-- Ghi nhận thời gian vào/ra
-- Tính phí tự động theo giờ (cho xe vãng lai)
-- Miễn phí cho xe gói tháng
-
-### 📊 Báo Cáo & Thống Kê
-- Thống kê doanh thu theo ngày/tháng/năm
-- Báo cáo số lượng xe vào/ra
-- Phân tích theo loại xe
-- Báo cáo khách hàng gửi tháng vs vãng lai
-- Xuất báo cáo chi tiết
-
-### 💵 Bảng Giá Linh Hoạt
-- Thiết lập giá theo loại xe
-- Giá theo giờ (hourly) và theo tháng (monthly)
-- Cập nhật bảng giá bởi Admin
-- Áp dụng giá khác nhau cho từng loại xe
-
-### 📱 Giao Diện Người Dùng
-- Responsive design với Bootstrap 5
-- Dashboard riêng cho từng loại người dùng
-- Thông báo realtime
-- Icon trực quan với Bootstrap Icons
-- Màu sắc phân loại theo trạng thái
-
-## 🛠 Công Nghệ Sử Dụng
-
-### Backend
-- **Framework:** Django 5.2.6
-- **Database:** SQLite3 (Development) / PostgreSQL (Production)
-- **Authentication:** Django Auth System
-- **ORM:** Django ORM
-
-### Frontend
-- **CSS Framework:** Bootstrap 5
-- **Icons:** Bootstrap Icons
-- **JavaScript:** Vanilla JS
-- **Template Engine:** Django Templates
-
-### Các Thư Viện Chính
-- `django-crispy-forms` - Form rendering
-- `Pillow` - Xử lý hình ảnh
-- `python-dateutil` - Xử lý ngày tháng
-
-## 📦 Cài Đặt
-
-### Yêu Cầu Hệ Thống
-- Python 3.8 trở lên
-- pip (Python package manager)
-- Git
-
-### Các Bước Cài Đặt
-
-1. **Clone Repository**
-```bash
-git clone https://github.com/ChiNguyenxK5/PhanTichVaThietKePhanMemNO1_Nhom14.git
-cd PhanTichVaThietKePhanMemNO1_Nhom14
-```
-
-2. **Tạo Virtual Environment**
-```bash
-# Windows
-python -m venv venv
-venv\Scripts\activate
-
-# Linux/Mac
-python3 -m venv venv
-source venv/bin/activate
-```
-
-3. **Cài Đặt Dependencies**
-```bash
-pip install django pillow python-dateutil django-crispy-forms crispy-bootstrap5
-```
-
-4. **Tạo File Requirements** (tùy chọn)
-```bash
-pip freeze > requirements.txt
-```
-
-5. **Chạy Migrations**
-```bash
-python manage.py makemigrations
-python manage.py migrate
-```
-
-6. **Tạo Superuser (Admin)**
-```bash
-python manage.py init_admin
-python manage.py init_roles
-```
-
-7. **Khởi Động Server**
-```bash
-python manage.py runserver
-```
-
-8. **Truy Cập Ứng Dụng**
-- Website: http://127.0.0.1:8000/
-- Admin Panel: http://127.0.0.1:8000/admin/
-
-## 📁 Cấu Trúc Dự Án
+## Cấu trúc thư mục
 
 ```
-PhanTichVaThietKePhanMemNO1_Nhom14/
+tests/
+├── whitebox_tests/          # Django TestCase (Unit Test)
+│   ├── __init__.py
+│   ├── test_login.py        # Kiểm thử đăng nhập
+│   ├── test_customer.py     # Kiểm thử quản lý khách hàng
+│   ├── test_vehicle.py      # Kiểm thử quản lý phương tiện
+│   ├── test_parking.py      # Kiểm thử check-in/check-out
+│   └── test_pricing.py      # Kiểm thử bảng giá
 │
-├── accounts/              # Quản lý tài khoản & authentication
-│   ├── models.py          # Custom User model
-│   ├── views.py           # Login, logout, register
-│   └── urls.py
-│
-├── customers/             # Quản lý khách hàng
-│   ├── models.py          # Customer, MonthlySubscription, Wallet
-│   ├── views.py           # Customer dashboard, vehicle management
-│   ├── subscription_views.py  # Đăng ký gói tháng
-│   ├── wallet_views.py    # Quản lý ví
-│   └── templatetags/      # Custom template filters
-│
-├── vehicles/              # Quản lý xe
-│   ├── models.py          # Vehicle model
-│   ├── views.py           # CRUD operations
-│   └── admin.py           # Admin interface
-│
-├── parking/               # Quản lý bãi xe
-│   ├── models.py          # ParkingLot, ParkingRecord
-│   ├── views.py           # Vào/ra bãi, tính phí
-│   └── admin.py
-│
-├── cards/                 # Quản lý thẻ & thanh toán
-│   ├── models.py          # Card, PaymentTransaction
-│   └── views.py
-│
-├── pricing/               # Quản lý bảng giá
-│   ├── models.py          # PricingSetting
-│   ├── views.py           # CRUD pricing
-│   └── admin.py
-│
-├── finance/               # Quản lý tài chính
-│   ├── models.py          # Transaction records
-│   └── views.py
-│
-├── reports/               # Báo cáo & thống kê
-│   ├── views.py           # Revenue, statistics
-│   └── templates/
-│
-├── templates/             # Django templates
-│   ├── base.html          # Base template
-│   ├── accounts/          # Login, register templates
-│   ├── customers/         # Customer templates
-│   ├── parking/           # Parking templates
-│   └── reports/           # Report templates
-│
-├── static/                # Static files
-│   ├── css/
-│   ├── js/
-│   └── images/
-│
-├── parking_management/    # Project settings
-│   ├── settings.py        # Django settings
-│   ├── urls.py            # Root URLs
-│   └── wsgi.py
-│
-├── manage.py              # Django management script
-└── db.sqlite3             # SQLite database
+├── selenium_tests/          # Selenium WebDriver Test
+│   ├── __init__.py
+│   ├── selenium_login.py    # Kiểm thử đăng nhập qua trình duyệt
+│   ├── selenium_customer.py # Kiểm thử quản lý khách hàng
+│   ├── selenium_vehicle.py  # Kiểm thử quản lý phương tiện
+│   ├── selenium_checkin_checkout.py  # Kiểm thử check-in/out
+│   
+└── README.md
 ```
 
-## 🎯 Sử Dụng
+---
 
-### 1. Tài Khoản Admin
+## PHẦN 1: White-box Testing (Django TestCase)
 
-**Truy cập Admin Panel:**
-- URL: `/admin/`
-- Đăng nhập bằng superuser đã tạo
+### Phương pháp kiểm thử
 
-**Chức năng:**
-- ✅ Quản lý tất cả users (Admin, Nhân viên, Khách hàng)
-- ✅ Duyệt/từ chối đăng ký xe
-- ✅ Cập nhật bảng giá
-- ✅ Quản lý bãi xe
-- ✅ Xem báo cáo doanh thu
-- ✅ Quản lý gói đăng ký tháng
+| Tiêu chí | Mô tả |
+|---------|-------|
+| **Statement Coverage** | Mọi câu lệnh trong hàm được thực thi ≥ 1 lần |
+| **Branch Coverage** | Mọi nhánh `if/else` được đi qua |
+| **Condition Coverage** | Mọi biểu thức Boolean được thử cả `True` và `False` |
 
-### 2. Tài Khoản Nhân Viên
+### Chi tiết từng file test
 
-**Dashboard:** `/staff/dashboard/`
+#### `test_login.py`
+**Mô tả**: Kiểm thử 3 view đăng nhập với tất cả comment bằng tiếng Việt
+- `login_view` – đăng nhập bằng email
+- `admin_login_view` – đăng nhập admin bằng username  
+- `user_login_view` – đăng nhập bằng email hoặc username
 
-**Chức năng:**
-- ✅ Duyệt đăng ký xe
-- ✅ Quản lý xe ra/vào bãi
-- ✅ Xem thông tin khách hàng
-- ✅ Xử lý thanh toán
-- ⛔ Không được thay đổi bảng giá
+**Các test case chính**:
+- ✅ Đăng nhập thành công cho admin/nhân viên/khách hàng
+- ✅ Xử lý sai mật khẩu và email không tồn tại
+- ✅ Kiểm tra trạng thái nhân viên (pending/rejected)
+- ✅ Validation form và safe redirect
 
-### 3. Tài Khoản Khách Hàng
+| Test Case | Branch được cover |
+|-----------|-----------------|
+| Login thành công (admin/nhân viên/khách hàng) | role == 'admin/nhanvien/khachhang' |
+| Sai mật khẩu | user is None |
+| Email không tồn tại | user_obj is None |
+| Email rỗng | email falsy |
+| Nhân viên pending bị chặn | status == 'pending' |
+| Nhân viên bị từ chối bị chặn | status == 'rejected' |
+| Username không phải admin | role != 'admin' |
+| Form rỗng | form.is_valid() = False |
+| Safe next redirect | url_has_allowed_host = True/False |
 
-**Dashboard:** `/customers/dashboard/`
+#### `test_customer.py`
+**Mô tả**: Kiểm thử model và CRUD khách hàng với comment tiếng Việt
+- Model Customer: validation, defaults, `__str__` method
+- Views: thêm, sửa, xóa, danh sách khách hàng
 
-**Chức năng:**
-- ✅ Đăng ký xe mới
-- ✅ Xem danh sách xe của mình
-- ✅ Đăng ký/gia hạn gói tháng **cho từng xe**
-- ✅ Quản lý ví (nạp tiền, xem lịch sử)
-- ✅ Theo dõi lịch sử ra/vào bãi
-- ✅ Xem trạng thái gói tháng từng xe
-- ✅ Nhận cảnh báo gói sắp hết hạn
+**Các test case chính**:
+- ✅ Tạo khách hàng vãng lai và gửi tháng
+- ✅ Validation form và xử lý lỗi
+- ✅ Tìm kiếm và lọc theo loại khách hàng
+- ✅ Ràng buộc xóa khách hàng có xe liên kết
 
-### 4. Quy Trình Sử Dụng
+| Test Case | Branch được cover |
+|-----------|-----------------|
+| Tạo khách hàng cơ bản | `__str__` với phone |
+| `__str__` không phone → hiển thị ID | `len(info_parts) == 1` |
+| Thêm khách vãng lai hợp lệ | name and phone → True |
+| Thêm khách gửi tháng hợp lệ | customer_type khác nhau |
+| Thiếu name | name falsy → False |
+| Thiếu phone | phone falsy → False |
+| Sửa hợp lệ | name and phone → True |
+| Sửa thiếu name | không lưu |
+| Xóa không có xe | vehicles_count == 0 |
+| Xóa có xe liên kết | vehicles_count > 0 → block |
+| Tìm kiếm theo tên | q filter active |
+| Lọc theo loại khách | customer_type_filter |
 
-#### Đăng Ký Xe Mới
-1. Khách hàng đăng nhập
-2. Vào "Xe của tôi" → "Đăng ký xe mới"
-3. Điền thông tin: Biển số, loại xe, màu sắc
-4. Chờ Admin/Nhân viên duyệt
+#### `test_vehicle.py`
+**Mô tả**: Kiểm thử model và quản lý phương tiện với comment tiếng Việt
+- Model Vehicle: unique constraints, status updates
+- Views: CRUD operations và checkout bởi nhân viên
 
-#### Đăng Ký Gói Tháng
-1. Vào "Gói tháng" → "Đăng ký gói tháng"
-2. **Chọn xe cụ thể** từ dropdown
-3. Chọn thời hạn (1/3/6/12 tháng)
-4. Xác nhận thanh toán từ ví
-5. Nhận thông báo thành công với ngày hết hạn
+**Các test case chính**:
+- ✅ Tạo phương tiện với validation biển số unique
+- ✅ Thêm/sửa/xóa xe với form validation
+- ✅ Checkout xe bởi nhân viên (in → out)
+- ✅ Lọc và tìm kiếm theo các tiêu chí
 
-#### Vào/Ra Bãi Xe
-1. Khách hàng vào "Xe của tôi"
-2. Click nút "Vào bãi" hoặc "Ra bãi"
-3. Hệ thống tự động:
-   - Kiểm tra gói tháng của **xe cụ thể đó**
-   - Nếu có gói còn hiệu lực → **Miễn phí**
-   - Nếu không có gói → Tính phí theo giờ
+| Test Case | Branch được cover |
+|-----------|-----------------|
+| Tạo phương tiện cơ bản | default values |
+| Biển số trùng → IntegrityError | unique constraint |
+| Không có khách hàng | null=True |
+| Thêm xe hợp lệ | form.is_valid() = True |
+| Biển số trùng → form lỗi | form.is_valid() = False |
+| Thiếu biển số | required field |
+| Checkout xe đang gửi | status == 'in' → checkout |
+| Checkout xe đã ra | status == 'out' → no change |
+| Xóa xe thành công | vehicle.delete() |
+| Lọc theo khách tháng/vãng lai/tất cả | customer_type_filter |
 
-## 🔒 Phân Quyền
+#### `test_parking.py`
+**Mô tả**: Kiểm thử check-in/out và models liên quan với comment tiếng Việt
+- ParkingRecord: tính phí, fee calculation
+- PricingSetting: get_price và fallback defaults
+- Vehicle toggle parking: check-in/out bởi khách hàng
 
-| Chức Năng | Admin | Nhân Viên | Khách Hàng |
-|-----------|-------|-----------|------------|
-| Quản lý users | ✅ | ⛔ | ⛔ |
-| Duyệt xe | ✅ | ✅ | ⛔ |
-| Cập nhật giá | ✅ | ⛔ | ⛔ |
-| Đăng ký xe | ✅ | ✅ | ✅ |
-| Đăng ký gói tháng | ⛔ | ⛔ | ✅ |
-| Quản lý ví | ⛔ | ⛔ | ✅ |
-| Xem báo cáo | ✅ | ✅ | ⛔ |
-| Vào/ra bãi | ✅ | ✅ | ✅ |
+**Các test case chính**:
+- ✅ Check-in xe vào bãi lần đầu
+- ✅ Check-out xe có gói tháng (miễn phí)
+- ✅ Check-out xe vãng lai (tính phí theo giờ)
+- ✅ Kiểm tra xe chưa duyệt và quyền sở hữu
 
-## 🔌 API Endpoints
+| Test Case | Branch được cover |
+|-----------|-----------------|
+| Tạo ParkingRecord | entry_time không null |
+| `calculate_fee` không có exit_time → None | `not self.exit_time` |
+| `calculate_fee` không có rate → None | `not self.parking_rate` |
+| `PricingSetting.get_price` tìm thấy | active setting exists |
+| `PricingSetting.get_price` không tìm thấy | DoesNotExist → default |
+| `get_price` setting inactive | is_active=False → DoesNotExist |
+| Giá mặc định cho mọi combo | defaults dict |
+| Check-in xe vào bãi | active_record is None → vào |
+| Check-out xe có gói tháng | current_subscription is not None |
+| Check-out xe vãng lai | current_subscription is None |
+| Xe chưa duyệt bị chặn | not vehicle.approved |
+| Xe của người khác bị chặn | vehicle.customer != owner_obj |
 
-### Accounts
-```
-POST   /accounts/login/           # Đăng nhập
-POST   /accounts/register/        # Đăng ký
-GET    /accounts/logout/          # Đăng xuất
-GET    /accounts/profile/         # Xem profile
-```
+#### `test_pricing.py`
+**Mô tả**: Kiểm thử hệ thống bảng giá với comment tiếng Việt
+- PricingSetting và PricingService models
+- Admin pricing management views
 
-### Customers
-```
-GET    /customers/dashboard/      # Dashboard khách hàng
-GET    /customers/vehicles/       # Danh sách xe
-POST   /customers/vehicles/add/   # Thêm xe mới
-GET    /customers/history/        # Lịch sử
-POST   /customers/subscribe/      # Đăng ký gói tháng
-GET    /customers/wallet/         # Quản lý ví
-POST   /customers/wallet/deposit/ # Nạp tiền
-```
+**Các test case chính**:
+- ✅ Tạo và cập nhật bảng giá
+- ✅ Tính phí và fallback giá mặc định
+- ✅ Validation giá và kiểm soát quyền truy cập admin
+- ✅ Format giá theo định dạng tiền tệ
 
-### Parking
-```
-POST   /parking/vehicle/{id}/toggle/  # Vào/ra bãi
-GET    /parking/lots/                 # Danh sách bãi
-GET    /parking/records/              # Lịch sử ra/vào
-```
+| Test Case | Branch được cover |
+|-----------|-----------------|
+| `PricingSetting.get_price` active | try → return pricing.price |
+| `PricingSetting.get_price` not found | except DoesNotExist → defaults |
+| Inactive setting → fallback | is_active=False → not found |
+| Unknown combination → 0 | not in defaults dict |
+| `PricingService.get_price` active | try → return price |
+| `PricingService.get_price` not found | except → return 0 |
+| `formatted_price()` | format với dấu phẩy |
+| POST cập nhật giá | update_or_create |
+| POST giá không hợp lệ | ValueError → continue |
+| POST giá rỗng | value = '' → price = 0 |
 
-### Pricing
-```
-GET    /pricing/                  # Xem bảng giá
-POST   /pricing/update/          # Cập nhật giá (Admin)
-```
+### Cách chạy White-box Tests
 
-### Reports
-```
-GET    /reports/revenue/         # Báo cáo doanh thu
-GET    /reports/statistics/      # Thống kê
-```
+> ⚠️ **Quan trọng**: Hệ thống dùng MySQL làm database chính. Test cần dùng SQLite để tách biệt. Thêm cấu hình sau vào settings hoặc tạo `tests/test_settings.py`:
 
-## 🎨 Screenshots
-
-### Dashboard Khách Hàng
-- Tổng quan số xe, gói tháng, số dư ví
-- Danh sách xe với trạng thái gói tháng rõ ràng
-- Thông báo gói sắp hết hạn
-
-### Trang Lịch Sử
-- **Card hiển thị từng xe** với thông tin gói tháng:
-  - ✅ Gói đang hoạt động (màu xanh) + số ngày còn lại
-  - ⚠️ Sắp hết hạn (màu vàng)
-  - ❌ Đã hết hạn (màu đỏ) + nút gia hạn
-  - ℹ️ Chưa có gói (màu xám) + nút đăng ký
-
-- Bảng lịch sử ra/vào với cột "Gói tháng"
-
-## 🧪 Testing
-
-```bash
-# Chạy tất cả tests
-python manage.py test
-
-# Test một app cụ thể
-python manage.py test customers
-python manage.py test vehicles
-
-# Test với coverage
-pip install coverage
-coverage run --source='.' manage.py test
-coverage report
-```
-
-## 🚀 Deployment
-
-### Production Settings
-
-1. **Cập nhật settings.py:**
+#### Tạo file cấu hình test (`tests/test_settings.py`)
 ```python
-DEBUG = False
-ALLOWED_HOSTS = ['yourdomain.com']
-```
+from parking_management.settings import *
 
-2. **Sử dụng PostgreSQL:**
-```python
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'parking_db',
-        'USER': 'your_user',
-        'PASSWORD': 'your_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
     }
 }
 ```
 
-3. **Collect Static Files:**
+#### Chạy tất cả white-box tests
 ```bash
-python manage.py collectstatic
+# Dùng SQLite in-memory (khuyến nghị)
+python manage.py test tests.whitebox_tests --settings=tests.test_settings
+
+# Hoặc chạy từng module
+python manage.py test tests.whitebox_tests.test_login --settings=tests.test_settings
+python manage.py test tests.whitebox_tests.test_customer --settings=tests.test_settings
+python manage.py test tests.whitebox_tests.test_vehicle --settings=tests.test_settings
+python manage.py test tests.whitebox_tests.test_parking --settings=tests.test_settings
+python manage.py test tests.whitebox_tests.test_pricing --settings=tests.test_settings
 ```
 
-4. **Deploy với Gunicorn:**
+#### Chạy với coverage report
 ```bash
-pip install gunicorn
-gunicorn parking_management.wsgi:application
+python -m pip install coverage
+python -m coverage run --source='.' manage.py test tests.whitebox_tests --settings=tests.test_settings
+python -m coverage report -m
+python -m coverage html  # Tạo báo cáo HTML
 ```
-
-## 📝 Database Schema
-
-### Các Model Chính
-
-**Customer**
-- user (OneToOne → User)
-- name, phone, email, address
-- customer_type: "Khách vãng lai" / "Khách gửi tháng"
-- status: not_registered / awaiting_approval / approved
-
-**Vehicle**
-- customer (ForeignKey → Customer)
-- plate_number (unique)
-- vehicle_type: car / motorcycle / bicycle / truck / taxi
-- color
-- approved (Boolean)
-- check_in (DateTime) - trạng thái trong/ngoài bãi
-
-**MonthlySubscription**
-- customer (ForeignKey → Customer)
-- **vehicle (ForeignKey → Vehicle)** - Gói tháng gắn với xe cụ thể
-- start_date, end_date
-- is_active (Boolean)
-
-**Wallet**
-- customer (OneToOne → Customer)
-- balance (Decimal)
-
-**ParkingRecord**
-- vehicle (ForeignKey → Vehicle)
-- parking_lot (ForeignKey → ParkingLot)
-- entry_time, exit_time
-- fee (Decimal)
-- is_paid (Boolean)
-
-**PricingSetting**
-- vehicle_type: car / motorcycle / bicycle / truck / taxi
-- package_type: hourly / monthly
-- price (Decimal)
-
-## 🤝 Đóng Góp
-
-Chúng tôi hoan nghênh mọi đóng góp! Vui lòng:
-
-1. Fork repository
-2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Mở Pull Request
-
-## 👥 Tác Giả
-
-**Nhóm 14 - Phân Tích và Thiết Kế Phần Mềm NO1**
-- Thành viên : Nguyễn Duy Anh Tuấn , Nguyễn Mạnh Chí , Đỗ Tiến Sĩ
-- GitHub: [@ChiNguyenxK5](https://github.com/ChiNguyenxK5)
-- Repository: [PhanTichVaThietKePhanMemNO1_Nhom14](https://github.com/ChiNguyenxK5/PhanTichVaThietKePhanMemNO1_Nhom14)
-
-## 📞 Liên Hệ
-
-Nếu có bất kỳ câu hỏi hoặc góp ý nào, vui lòng:
-- Tạo Issue trên GitHub
-- Hoặc liên hệ qua email
-
-## 🙏 Lời Cảm Ơn
-
-- Django Documentation
-- Bootstrap Team
-- Bootstrap Icons
-- Tất cả contributors
 
 ---
 
-**Made with ❤️ by Nhóm 14**
+## PHẦN 2: Selenium Testing
+
+**Lưu ý**: Các file Selenium vẫn giữ comment bằng tiếng Anh để tương thích với chuẩn quốc tế của Selenium WebDriver.
+
+### Yêu cầu cài đặt
+
+```bash
+pip install selenium
+# Tải ChromeDriver phù hợp với phiên bản Chrome:
+# https://chromedriver.chromium.org/downloads
+```
+
+### Cấu hình trước khi chạy
+
+Trước khi chạy Selenium tests, cần:
+
+1. **Khởi động server Django**:
+   ```bash
+   python manage.py runserver
+   ```
+
+2. **Tạo dữ liệu test** (nếu chưa có):
+   ```bash
+   python manage.py createsuperuser --username admin --email admin@test.com
+   ```
+
+3. **Cập nhật thông tin đăng nhập** trong mỗi file Selenium:
+   ```python
+   ADMIN_USERNAME = "your_admin_username"
+   ADMIN_PASSWORD = "your_admin_password"
+   ```
+
+### Chi tiết từng file Selenium test
+
+#### `selenium_login.py`
+| Kịch bản | Mô tả |
+|----------|-------|
+| Admin login thành công | Redirect đến dashboard_admin |
+| Login sai mật khẩu | Ở lại trang, có thông báo lỗi |
+| Login form trống | Validation HTML5 / server-side |
+| Username không tồn tại | Thông báo lỗi |
+| User login sai mật khẩu | Ở lại trang user_login |
+| User login form rỗng | Validation |
+
+#### `selenium_customer.py`
+| Kịch bản | Mô tả |
+|----------|-------|
+| Xem danh sách khách hàng | Trang load thành công |
+| Thêm khách hàng hợp lệ | Form điền + submit → redirect |
+| Tìm kiếm theo tên | Filter q= hoạt động |
+| Thêm thiếu tên | Validation lỗi |
+
+#### `selenium_vehicle.py`
+| Kịch bản | Mô tả |
+|----------|-------|
+| Xem danh sách xe | Trang load thành công |
+| Mở form thêm xe | Form có input plate_number |
+| Thêm xe hợp lệ | Submit → redirect |
+| Thêm xe thiếu biển số | Validation lỗi |
+| Lọc theo loại khách | Filter customer_type= |
+| Tìm kiếm theo biển số | Search q= |
+
+#### `selenium_checkin_checkout.py`
+| Kịch bản | Mô tả |
+|----------|-------|
+| Nhân viên xem xe đang gửi | Danh sách xe load |
+| Nhân viên checkout xe | GET /vehicles/<pk>/checkout/ |
+| Tìm nút checkout trong danh sách | Link href chứa 'checkout' |
+| Khách hàng xem xe của mình | /customers/vehicles/ |
+| Khách hàng toggle parking | Click nút vào/ra bãi |
+| Khách hàng xem lịch sử | /customers/history/ |
+
+#### `selenium_pricing.py`
+| Kịch bản | Mô tả |
+|----------|-------|
+| Xem bảng giá | /parking/pricing/ load thành công |
+| Admin xem cài đặt giá | /parking/admin/pricing/ có form |
+| Admin cập nhật giá | POST với price_motorcycle_hourly |
+| Admin nhập giá sai | Không crash, bỏ qua |
+| Không phải admin → bị chặn | Redirect về login |
+
+### Cách chạy Selenium Tests
+Chạy server: python manage.py runserver
+
+```bash
+# Chạy từng file riêng lẻ
+python manage.py test tests.selenium_tests.selenium_login --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_customer --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_vehicle --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_checkin_checkout --settings=tests.test_settings 
+
+```
+
+---
+
+## PHẦN 3: Thống kê chức năng đã kiểm thử
+
+| Chức năng | Whitebox | Selenium | Ghi chú |
+|-----------|----------|----------|---------|
+| Login (admin_login_view) | ✅ 7 tests | ✅ 4 tests | Đầy đủ |
+| Login (login_view) | ✅ 8 tests | - | View login qua email |
+| Login (user_login_view) | ✅ 7 tests | ✅ 2 tests | Email/username |
+| Customer Model | ✅ 6 tests | - | Đầy đủ |
+| Customer Add | ✅ 5 tests | ✅ 2 tests | Đầy đủ |
+| Customer Edit | ✅ 4 tests | - | Đầy đủ |
+| Customer Delete | ✅ 4 tests | - | Đầy đủ |
+| Customer List/Search | ✅ 5 tests | ✅ 2 tests | Đầy đủ |
+| Vehicle Model | ✅ 7 tests | - | Đầy đủ |
+| Vehicle Form | ✅ 2 tests | - | Cơ bản |
+| Vehicle Add | ✅ 5 tests | ✅ 3 tests | Đầy đủ |
+| Vehicle Edit | ✅ 4 tests | - | Đầy đủ |
+| Vehicle Checkout (nhân viên) | ✅ 3 tests | ✅ 3 tests | Đầy đủ |
+| Vehicle List/Filter | ✅ 5 tests | ✅ 2 tests | Đầy đủ |
+| ParkingRecord Model | ✅ 4 tests | - | Cơ bản |
+| PricingSetting Model | ✅ 10 tests | - | Đầy đủ |
+| PricingService Model | ✅ 7 tests | - | Đầy đủ |
+| Check-in (toggle_parking) | ✅ 5 tests | ✅ 2 tests | Đầy đủ |
+| Check-out với gói tháng | ✅ 1 test | - | Đầy đủ |
+| Check-out vãng lai | ✅ 1 test | - | Đầy đủ |
+| Pricing Views | ✅ 8 tests | ✅ 5 tests | Đầy đủ |
+
+## PHẦN 5: Chức năng không thể test
+
+Một số chức năng không thể test tự động do thiếu dữ liệu hoặc giao diện:
+
+| Chức năng | Lý do không test được |
+|-----------|----------------------|
+| Upload ảnh phương tiện | Cần file image thực tế, không mock được trong unit test đơn giản |
+| Export Excel (`/vehicles/export/`) | Cần kiểm tra nội dung file binary; cần thư viện openpyxl |
+| Subscription check-in/out phức tạp | ParkingRecord yêu cầu Card và ParkingRate phải tồn tại (foreign key) |
+| Wallet transactions | Cần flow thanh toán phức tạp với nhiều model |
+| Salary management | Cần WorkShift active, logic phức tạp |
+| QR Code vehicle | Cần thư viện generate QR và khách hàng có profile |
+| Admin data cleaning views | Side effects khó kiểm soát trong test |
+| Selenium toggle-parking | Cần xe đã approved trong DB của server test |
+
+---
+
+## Lưu ý kỹ thuật
+
+### Database
+
+Hệ thống dùng **MySQL** làm production database. Để chạy whitebox tests mà không cần MySQL:
+
+```python
+# tests/test_settings.py
+from parking_management.settings import *
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': ':memory:',
+    }
+}
+```
+
+### Signal trong vehicles/models.py
+
+Model `Vehicle` có `post_save` signal tự động tạo `PaymentTransaction` khi khách **gửi tháng**. Các test dùng khách **vãng lai** để tránh phụ thuộc không cần thiết.
+
+### Selenium ChromeDriver
+
+- Tải ChromeDriver phù hợp với phiên bản Chrome: https://chromedriver.chromium.org/
+- Đặt vào PATH hoặc chỉ định đường dẫn trong code
+- Chạy headless bằng cách bỏ comment `options.add_argument("--headless")`
