@@ -27,7 +27,6 @@ tests/
 ---
 
 ## PHẦN 1: White-box Testing (Django TestCase)
-
 ### Phương pháp kiểm thử
 
 | Tiêu chí | Mô tả |
