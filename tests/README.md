@@ -39,7 +39,7 @@ tests/
 ### Chi tiết từng file test
 
 #### `test_login.py`
-**Mô tả**: Kiểm thử 3 view đăng nhập với tất cả comment bằng tiếng Việt
+**Mô tả**: Kiểm thử 3 view đăng nhập
 - `login_view` – đăng nhập bằng email
 - `admin_login_view` – đăng nhập admin bằng username  
 - `user_login_view` – đăng nhập bằng email hoặc username
@@ -63,7 +63,7 @@ tests/
 | Safe next redirect | url_has_allowed_host = True/False |
 
 #### `test_customer.py`
-**Mô tả**: Kiểm thử model và CRUD khách hàng với comment tiếng Việt
+**Mô tả**: Kiểm thử model và CRUD khách hàng 
 - Model Customer: validation, defaults, `__str__` method
 - Views: thêm, sửa, xóa, danh sách khách hàng
 
@@ -89,7 +89,7 @@ tests/
 | Lọc theo loại khách | customer_type_filter |
 
 #### `test_vehicle.py`
-**Mô tả**: Kiểm thử model và quản lý phương tiện với comment tiếng Việt
+**Mô tả**: Kiểm thử model và quản lý phương tiện
 - Model Vehicle: unique constraints, status updates
 - Views: CRUD operations và checkout bởi nhân viên
 
@@ -113,7 +113,7 @@ tests/
 | Lọc theo khách tháng/vãng lai/tất cả | customer_type_filter |
 
 #### `test_parking.py`
-**Mô tả**: Kiểm thử check-in/out và models liên quan với comment tiếng Việt
+**Mô tả**: Kiểm thử check-in/out và models liên quan
 - ParkingRecord: tính phí, fee calculation
 - PricingSetting: get_price và fallback defaults
 - Vehicle toggle parking: check-in/out bởi khách hàng
@@ -140,7 +140,7 @@ tests/
 | Xe của người khác bị chặn | vehicle.customer != owner_obj |
 
 #### `test_pricing.py`
-**Mô tả**: Kiểm thử hệ thống bảng giá với comment tiếng Việt
+**Mô tả**: Kiểm thử hệ thống bảng giá
 - PricingSetting và PricingService models
 - Admin pricing management views
 
@@ -203,8 +203,6 @@ python -m coverage html  # Tạo báo cáo HTML
 ---
 
 ## PHẦN 2: Selenium Testing
-
-**Lưu ý**: Các file Selenium vẫn giữ comment bằng tiếng Anh để tương thích với chuẩn quốc tế của Selenium WebDriver.
 
 ### Yêu cầu cài đặt
 
