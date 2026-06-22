@@ -204,8 +204,6 @@ python -m coverage html  # Tạo báo cáo HTML
 
 ## PHẦN 2: Selenium Testing
 
-**Lưu ý**: Các file Selenium vẫn giữ comment bằng tiếng Anh để tương thích với chuẩn quốc tế của Selenium WebDriver.
-
 ### Yêu cầu cài đặt
 
 ```bash
