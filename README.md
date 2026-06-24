@@ -28,8 +28,7 @@ tests/
 │   ├── selenium_customer.py
 │   ├── selenium_vehicle.py
 │   ├── selenium_checkin_checkout.py
-│   └── selenium_pricing.py
-│
+│ 
 └── README.md
 ```
 
@@ -271,36 +270,21 @@ ADMIN_PASSWORD = "password"
 * Xem danh sách xe
 * Thêm xe mới
 * Tìm kiếm xe
-* Lọc theo loại khách
 
 ### selenium_checkin_checkout.py
 
-* Theo dõi xe đang gửi
+* checkin xe
 * Checkout xe
 * Kiểm tra lịch sử gửi xe
 * Toggle trạng thái vào/ra bãi
 
-### selenium_pricing.py
-
-* Xem bảng giá
-* Quản lý giá dịch vụ
-* Cập nhật giá
-* Kiểm tra phân quyền
-
----
-
 ## Chạy Selenium Tests
 
 ```bash
-python manage.py test tests.selenium_tests.selenium_login
-
-python manage.py test tests.selenium_tests.selenium_customer
-
-python manage.py test tests.selenium_tests.selenium_vehicle
-
-python manage.py test tests.selenium_tests.selenium_checkin_checkout
-
-python manage.py test tests.selenium_tests.selenium_pricing
+python manage.py test tests.selenium_tests.selenium_login --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_customer --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_vehicle --settings=tests.test_settings 
+python manage.py test tests.selenium_tests.selenium_checkin_checkout --settings=tests.test_settings 
 ```
 
 ---
